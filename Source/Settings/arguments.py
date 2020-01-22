@@ -2,7 +2,9 @@ import torch
 class params:
     # whether to run on GPU
     gpu = False
-    device = torch.device('cpu')
+    # the tensor datatype used for storing DeepStack's internal data
+    Tensor = torch.FloatTensor
+    IntTensor = torch.ByteTensor
     # list of pot-scaled bet sizes to use in tree
     bet_sizing = [1]
     # the number of betting rounds in the game
@@ -37,4 +39,5 @@ class params:
 arguments = params()
 assert(arguments.cfr_iters > arguments.cfr_skip_iters)
 if arguments.gpu and torch.cuda.is_available():
-    arguments.device = torch.device('cuda')
+    arguments.Tensor = torch.cuda.FloatTensor
+    arguments.IntTensor = torch.cuda.ByteTensor
