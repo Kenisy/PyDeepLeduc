@@ -1,3 +1,10 @@
+''' A set of tools for basic operations on cards and sets of cards.
+
+Several of the functions deal with "range vectors", which are probability
+vectors over the set of possible private hands. For Leduc Hold'em,
+each private hand consists of one card.
+@module card_tools '''
+
 from Source.Settings.game_settings import game_settings
 from Source.Settings.arguments import arguments
 import torch
@@ -66,20 +73,20 @@ class M:
         distribution on [0,1), and the resulting range is normalized'''
         # seed = seed or torch.random()
         out = torch.rand(game_settings.card_count)
-        out.cmul_(self.get_possible_hand_indexes(board))
+        out.mul_(self.get_possible_hand_indexes(board))
         out.div_(out.sum())
         
         return out
 
-    def is_valid_range(self, range_, board):
+    def is_valid_range(self, _range, board):
         ''' Checks if a range vector is valid with a given board.
         @param range a range vector to check
         @param board a possibly empty vector of board cards
         @return `true` if the range puts 0 probability on invalid hands and has
         total probability 1'''
-        check = range_.clone()
-        only_possible_hands = range_.clone().cmul_(self.get_impossible_hand_indexes(board)).sum() == 0
-        sums_to_one = abs(1.0 - range_.sum()) < 0.0001
+        check = _range.clone()
+        only_possible_hands = _range.clone().mul_(self.get_impossible_hand_indexes(board)).sum() == 0
+        sums_to_one = abs(1.0 - _range.sum()) < 0.0001
         return only_possible_hands and sums_to_one
 
     def board_to_street(self, board):
@@ -130,7 +137,7 @@ class M:
         if game_settings.board_card_count == 1:
             self._board_index_table = torch.arange(game_settings.card_count)
         elif game_settings.board_card_count == 2:
-            self._board_index_table = arguments.Tensor(game_settings.card_count, game_settings.card_count).fill(-1)
+            self._board_index_table = arguments.Tensor(game_settings.card_count, game_settings.card_count).fill_(-1)
             board_idx = 0 
             for card_1 in range(game_settings.card_count): 
                 for card_2 in range(card_1 + 1, game_settings.card_count):
@@ -150,18 +157,18 @@ class M:
         assert index > 0, index
         return index
 
-    def normalize_range(self, board, range_):
+    def normalize_range(self, board, _range):
         ''' Normalizes a range vector over hands which are valid with a given board.
         @param board a possibly empty vector of board cards
         @param range a range vector
         @return a modified version of `range` where each invalid hand is given 0
         probability and the vector is normalized'''
         mask = self.get_possible_hand_indexes(board)
-        out = range_.clone().cmul(mask)
+        out = _range.clone().mul(mask)
         # return zero range if it all collides with board (avoid div by zero)
         if out.sum() == 0:
             return out
-        out.div(out.sum())
+        out.div_(out.sum())
         return out
 
 card_tools = M()

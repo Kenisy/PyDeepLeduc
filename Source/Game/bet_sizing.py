@@ -1,6 +1,6 @@
-# Gives allowed bets during a game.
-# Bets are restricted to be from a list of predefined fractions of the pot.
-# @classmod bet_sizing
+''' Gives allowed bets during a game.
+Bets are restricted to be from a list of predefined fractions of the pot.
+@classmod bet_sizing'''
 
 from Source.Settings.arguments import arguments
 import torch
@@ -24,7 +24,7 @@ class BetSizing:
         containing N sets of new commitment levels for each player '''
         current_player = node.current_player
         assert current_player == 0 or current_player == 1, 'Wrong player for bet size computation'
-        opponent = 2 - node.current_player 
+        opponent = 1 - node.current_player 
         opponent_bet = node.bets[opponent]
 
         assert node.bets[current_player] <= opponent_bet

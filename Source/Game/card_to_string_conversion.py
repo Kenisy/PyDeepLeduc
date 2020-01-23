@@ -1,3 +1,6 @@
+''' Converts between string and numeric representations of cards.
+@module card_to_string_conversion '''
+
 from Source.Settings.game_settings import game_settings
 from Source.Settings.arguments import arguments
 import torch

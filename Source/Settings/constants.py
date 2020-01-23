@@ -9,9 +9,9 @@ class constants:
     # @field P1 `1`
     # @field P2 `2`
     class players:
-        chance = 0
-        P1 = 1
-        P2 = 2
+        chance = -1
+        P1 = 0
+        P2 = 1
     players = players()
 
     # IDs for terminal nodes (either after a fold or call action) and nodes that follow a check action

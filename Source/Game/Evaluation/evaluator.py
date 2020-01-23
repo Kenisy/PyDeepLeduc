@@ -1,3 +1,13 @@
+''' Evaluates hand strength in Leduc Hold'em and variants.
+
+Works with hands which contain two or three cards, but assumes that
+the deck contains no more than two cards of each rank (so three-of-a-kind
+is not a possible hand).
+
+Hand strength is given as a numerical value, where a lower strength means
+a stronger hand: high pair < low pair < high card < low card
+@module evaluator '''
+
 from Source.Settings.game_settings import game_settings
 from Source.Game.card_tools import card_tools
 from Source.Game.card_to_string_conversion import card_to_string
