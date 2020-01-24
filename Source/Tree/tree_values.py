@@ -3,6 +3,7 @@ as well as the value of a best response against the profile.
 @classmod tree_values'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
+from Source.Settings.game_settings import game_settings
 from Source.Game.card_tools import card_tools
 from Source.TerminalEquity.terminal_equity import TerminalEquity
 import torch
@@ -27,7 +28,7 @@ class TreeValues:
         if(node.terminal):
             return
         
-        assert(node.strategy)
+        assert(node.strategy != None)
 
         actions_count = len(node.children) 
         
@@ -48,7 +49,7 @@ class TreeValues:
         
         # check if the range consists only of cards that don't overlap with the board
         impossible_hands_mask = hands_mask.clone().fill_(1) - hands_mask
-        impossible_range_sum = node.ranges_absolute.clone().mul(impossible_hands_mask.view(1, game_settings.card_count).expandAs(node.ranges_absolute)).sum()  
+        impossible_range_sum = node.ranges_absolute.clone().mul(impossible_hands_mask.view(1, game_settings.card_count).expand_as(node.ranges_absolute)).sum()  
         assert impossible_range_sum == 0, impossible_range_sum
             
         children_ranges_absolute = arguments.Tensor(len(node.children), constants.players_count, game_settings.card_count)
@@ -56,18 +57,18 @@ class TreeValues:
         # chance player
         if node.current_player == constants.players.chance:
             # multiply ranges of both players by the chance prob
-            children_ranges_absolute[:, constants.players.P1, :].copy_(node.ranges_absolute[constants.players.P1].repeatTensor(actions_count, 1))
-            children_ranges_absolute[:, constants.players.P2, :].copy_(node.ranges_absolute[constants.players.P2].repeatTensor(actions_count, 1))
+            children_ranges_absolute[:, constants.players.P1, :].copy_(node.ranges_absolute[constants.players.P1].repeat(actions_count, 1))
+            children_ranges_absolute[:, constants.players.P2, :].copy_(node.ranges_absolute[constants.players.P2].repeat(actions_count, 1))
             
             children_ranges_absolute[:, constants.players.P1, :].mul_(node.strategy)
             children_ranges_absolute[:, constants.players.P2, :].mul_(node.strategy)
         # player
         else:
             # copy the range for the non-acting player  
-            children_ranges_absolute[:, 1-node.current_player, :] = node.ranges_absolute[1-node.current_player].clone().repeatTensor(actions_count, 1) 
+            children_ranges_absolute[:, 1-node.current_player, :] = node.ranges_absolute[1-node.current_player].clone().repeat(actions_count, 1) 
             
             # multiply the range for the acting player using his strategy    
-            ranges_mul_matrix = node.ranges_absolute[node.current_player].repeatTensor(actions_count, 1) 
+            ranges_mul_matrix = node.ranges_absolute[node.current_player].repeat(actions_count, 1) 
             children_ranges_absolute[:, node.current_player, :] = torch.mul(node.strategy, ranges_mul_matrix)
         
         # fill the ranges for the children
@@ -98,9 +99,9 @@ class TreeValues:
             values = node.ranges_absolute.clone().fill_(0)
 
             if(node.type == constants.node_types.terminal_fold):
-                self.terminal_equity.tree_node_fold_value(node.ranges_absolute, values, 1-node.current_player)
+                values = self.terminal_equity.tree_node_fold_value(node.ranges_absolute, values, 1-node.current_player)
             else:
-                self.terminal_equity.tree_node_call_value(node.ranges_absolute, values)
+                values = self.terminal_equity.tree_node_call_value(node.ranges_absolute, values)
 
             # multiply by the pot
             values = values * node.pot
@@ -130,30 +131,33 @@ class TreeValues:
 
             # compute CFVs given the current strategy for this node
             if node.current_player == constants.players.chance:
-                node.cf_values = cf_values_allactions.sum(dim=0)[0]
-                node.cf_values_br = cf_values_br_allactions.sum(dim=0)[0]
+                # TODO rework need check logic
+                # node.cf_values = cf_values_allactions.sum(dim=0)[0]
+                # node.cf_values_br = cf_values_br_allactions.sum(dim=0)[0]
+                node.cf_values = cf_values_allactions.sum(dim=0)
+                node.cf_values_br = cf_values_br_allactions.sum(dim=0)
             else:
                 node.cf_values[node.current_player] = torch.mul(strategy_mul_matrix, cf_values_allactions[:, node.current_player, :]).sum(dim=0)
                 node.cf_values[1-node.current_player] = (cf_values_allactions[:, 1-node.current_player, :]).sum(dim=0)
             
                 # compute CFVs given the BR strategy for this node
                 node.cf_values_br[1 - node.current_player] = cf_values_br_allactions[:, 1 - node.current_player, :].sum(dim=0)
-                node.cf_values_br[node.current_player] = cf_values_br_allactions[:, node.current_player, :].max(dim=0)
+                node.cf_values_br[node.current_player] = cf_values_br_allactions[:, node.current_player, :].max(dim=0).values
 
         # counterfactual values weighted by the reach prob
         node.cfv_infset = arguments.Tensor(2)
-        node.cfv_infset[0] = node.cf_values[0] * node.ranges_absolute[0]
-        node.cfv_infset[1] = node.cf_values[1] * node.ranges_absolute[1]
+        node.cfv_infset[0] = node.cf_values[0] @ node.ranges_absolute[0]
+        node.cfv_infset[1] = node.cf_values[1] @ node.ranges_absolute[1]
 
         # compute CFV-BR values weighted by the reach prob
         node.cfv_br_infset = arguments.Tensor(2)
-        node.cfv_br_infset[0] = node.cf_values_br[0] * node.ranges_absolute[0]
-        node.cfv_br_infset[1] = node.cf_values_br[1] * node.ranges_absolute[1]
+        node.cfv_br_infset[0] = node.cf_values_br[0] @ node.ranges_absolute[0]
+        node.cfv_br_infset[1] = node.cf_values_br[1] @ node.ranges_absolute[1]
 
         node.epsilon = node.cfv_br_infset - node.cfv_infset
         node.exploitability = node.epsilon.mean()
 
-    def compute_values(self, root, starting_ranges ):
+    def compute_values(self, root, starting_ranges=None ):
         ''' Compute the self play and best response values of a strategy profile on
         the given game tree.
 
@@ -168,12 +172,13 @@ class TreeValues:
         at the root node (default uniform)'''
         # 1.0 set the starting range
         uniform_ranges = arguments.Tensor(constants.players_count, game_settings.card_count).fill_(1.0/game_settings.card_count)  
-        starting_ranges = uniform_ranges if not starting_ranges
+        if starting_ranges == None:
+            starting_ranges = uniform_ranges
         
         # 2.0 check the starting ranges
-        checksum = starting_ranges.sum(dim=1)[:, 0]
-        assert(math.abs(checksum[0] - 1) < 0.0001, 'starting range does not sum to 1')
-        assert(math.abs(checksum[1] - 1) < 0.0001, 'starting range does not sum to 1')
+        checksum = starting_ranges.sum(dim=1)
+        assert abs(checksum[0] - 1) < 0.0001, 'starting range does not sum to 1'
+        assert abs(checksum[1] - 1) < 0.0001, 'starting range does not sum to 1'
         assert(starting_ranges.lt(0).sum() == 0) 
         
         # 3.0 compute the values  

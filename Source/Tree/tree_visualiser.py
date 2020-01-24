@@ -3,6 +3,7 @@
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Game.card_to_string_conversion import card_to_string
+from graphviz import render
 
 # TODO: README
 # dot tree_2.dot -Tpng -O
@@ -28,7 +29,7 @@ class TreeVisualiser:
         self.node_to_graphviz_counter = 0
         self.edge_to_graphviz_counter = 0
 
-    def add_tensor(self, tensor, name, _format, labels):
+    def add_tensor(self, tensor, name=None, _format=None, labels=None):
         ''' Generates a string representation of a tensor.
         @param tensor a tensor
         @param[opt] name a name for the tensor
@@ -44,7 +45,7 @@ class TreeVisualiser:
         if not _format:
             _format = '{:.3f}'
 
-        for i in range(tensor:size(0)):
+        for i in range(tensor.size(0)):
             if labels:
                 out = out + labels[i] + ":"
             out = out + _format.format(tensor[i]) + ", "
@@ -61,16 +62,16 @@ class TreeVisualiser:
         @local'''   
         out = ""
         
-        if(node.ranges_absolute):
+        if(node.ranges_absolute != None):
             out = out + self.add_tensor(node.ranges_absolute[0], 'abs_range1')
             out = out + self.add_tensor(node.ranges_absolute[1], 'abs_range2')
 
-        if(node.cf_values):
+        if(node.cf_values != None):
             # cf values computed by real tree dfs
             out = out + self.add_tensor(node.cf_values[0], 'cf_values1')
             out = out + self.add_tensor(node.cf_values[1], 'cf_values2')
         
-        if(node.cf_values_br):
+        if(node.cf_values_br != None):
             # cf values that br has in real tree
             out = out + self.add_tensor(node.cf_values_br[0], 'cf_values_br1')
             out = out + self.add_tensor(node.cf_values_br[1], 'cf_values_br2')
@@ -85,7 +86,7 @@ class TreeVisualiser:
         out = Graph()
         
         # 1.0 label
-        out.label = '"<f0>' + node.current_player
+        out.label = '"<f0>' + str(node.current_player)
         
         if node.terminal:
             if node.type == constants.node_types.terminal_fold:
@@ -94,37 +95,37 @@ class TreeVisualiser:
                 out.label = out.label + '| TERMINAL CALL'
             else:
                 assert False, 'unknown terminal node type'
-        else
-            out.label = out.label + '| bet1: ' + node.bets[constants.players.P1] + '| bet2: ' + node.bets[constants.players.P2]
+        else:
+            out.label = out.label + '| bet1: ' + str(node.bets[constants.players.P1].item()) + '| bet2: ' + str(node.bets[constants.players.P2].item())
             
             if node.street:
-                out.label = out.label + '| street: ' + node.street
+                out.label = out.label + '| street: ' + str(node.street)
                 out.label = out.label + '| board: ' + card_to_string.cards_to_string(node.board)
-                out.label = out.label + '| depth: ' + node.depth
+                out.label = out.label + '| depth: ' + str(node.depth)
         
         if node.margin:
             out.label = out.label +  '| margin: ' + node.margin
 
         out.label = out.label + self.add_range_info(node)  
         
-        if(node.cfv_infset):
-            out.label = out.label +  '| cfv1: ' + node.cfv_infset[0]
-            out.label = out.label +  '| cfv2: ' + node.cfv_infset[1]
-            out.label = out.label +  '| cfv_br1: ' + node.cfv_br_infset[0]
-            out.label = out.label +  '| cfv_br2: ' + node.cfv_br_infset[1]
-            out.label = out.label +  '| epsilon1: ' + node.epsilon[0]
-            out.label = out.label +  '| epsilon2: ' + node.epsilon[1]
+        if(node.cfv_infset != None):
+            out.label = out.label +  '| cfv1: ' + str(node.cfv_infset[0].item())
+            out.label = out.label +  '| cfv2: ' + str(node.cfv_infset[1].item())
+            out.label = out.label +  '| cfv_br1: ' + str(node.cfv_br_infset[0].item())
+            out.label = out.label +  '| cfv_br2: ' + str(node.cfv_br_infset[1].item())
+            out.label = out.label +  '| epsilon1: ' + str(node.epsilon[0].item())
+            out.label = out.label +  '| epsilon2: ' + str(node.epsilon[1].item())
         
         if node.lookahead_coordinates:
             out.label = out.label +  '| COORDINATES '
-            out.label = out.label +  '| action_id: ' + node.lookahead_coordinates[0]
-            out.label = out.label +  '| parent_action_id: ' + node.lookahead_coordinates[1]
-            out.label = out.label +  '| gp_id: ' + node.lookahead_coordinates[2]
+            out.label = out.label +  '| action_id: ' + str(node.lookahead_coordinates[0].item())
+            out.label = out.label +  '| parent_action_id: ' + str(node.lookahead_coordinates[1].item())
+            out.label = out.label +  '| gp_id: ' + str(node.lookahead_coordinates[2].item())
         
         out.label = out.label + '"'
         
         # 2.0 name
-        out.name = '"node' + self.node_to_graphviz_counter + '"'
+        out.name = '"node' + str(self.node_to_graphviz_counter) + '"'
         
         # 3.0 shape
         out.shape = '"record"' 
@@ -206,7 +207,7 @@ class TreeVisualiser:
             
         for i in range(len(edges)):
             edge = edges[i]
-            edge_text = edge.id_from + ':f0 -> ' + edge.id_to + ':f0 [ id = ' + edge.id + ' label = "' + edge.strategy + '"];'
+            edge_text = edge.id_from + ':f0 -> ' + edge.id_to + ':f0 [ id = ' + str(edge.id) + ' label = "' + edge.strategy + '"];'
             
             out = out + edge_text
             
@@ -215,3 +216,5 @@ class TreeVisualiser:
         # write into dot file
         with open(filename, 'w') as f:
             f.write(out)
+
+        render('dot', 'png', filename)

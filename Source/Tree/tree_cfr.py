@@ -7,6 +7,7 @@ simply for convenience.
 @classmod tree_cfr'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
+from Source.Settings.game_settings import game_settings
 from Source.TerminalEquity.terminal_equity import TerminalEquity
 import torch
 
@@ -53,9 +54,9 @@ class TreeCFR:
             values = node.ranges_absolute.clone().fill_(0)
 
             if(node.type == constants.node_types.terminal_fold):
-                terminal_equity.tree_node_fold_value(node.ranges_absolute, values, opponent_index)
+                values = terminal_equity.tree_node_fold_value(node.ranges_absolute, values, opponent_index)
             else:
-                terminal_equity.tree_node_call_value(node.ranges_absolute, values)
+                values = terminal_equity.tree_node_call_value(node.ranges_absolute, values)
 
             # multiply by the pot
             values = values * node.pot
@@ -71,8 +72,10 @@ class TreeCFR:
                 # we have to compute current strategy at the beginning of each iteraton 
                 
                 # initialize regrets in the first iteration
-                node.regrets = arguments.Tensor(actions_count, game_settings.card_count).fill_(self.regret_epsilon) if not node.regrets # [[actions_count x card_count]]
-                node.possitive_regrets = arguments.Tensor(actions_count, game_settings.card_count).fill_(self.regret_epsilon) if not node.possitive_regrets
+                if node.regrets == None:
+                    node.regrets = arguments.Tensor(actions_count, game_settings.card_count).fill_(self.regret_epsilon) # [[actions_count x card_count]]
+                if node.possitive_regrets == None:
+                    node.possitive_regrets = arguments.Tensor(actions_count, game_settings.card_count).fill_(self.regret_epsilon)
                 
                 # compute positive regrets so that we can compute the current strategy fromm them
                 node.possitive_regrets.copy_(node.regrets)
@@ -86,13 +89,13 @@ class TreeCFR:
             # current cfv [[actions, players, ranges]]
             cf_values_allactions = arguments.Tensor(actions_count, constants.players_count, game_settings.card_count).fill_(0)
             
-            children_ranges_absolute = arguments.Tensor(constants.players_count)
+            children_ranges_absolute = {}
 
             if node.current_player == constants.players.chance:
                 ranges_mul_matrix = node.ranges_absolute[0].repeat(actions_count, 1)
                 children_ranges_absolute[0] = torch.mul(current_strategy, ranges_mul_matrix)
             
-                ranges_mul_matrix = node.ranges_absolute[2].repeat(actions_count, 1)
+                ranges_mul_matrix = node.ranges_absolute[1].repeat(actions_count, 1)
                 children_ranges_absolute[1] = torch.mul(current_strategy, ranges_mul_matrix)
             else:
                 ranges_mul_matrix = node.ranges_absolute[node.current_player].repeat(actions_count, 1)
@@ -107,7 +110,7 @@ class TreeCFR:
                 
                 child_node.ranges_absolute[0].copy_(children_ranges_absolute[0][i])
                 child_node.ranges_absolute[1].copy_(children_ranges_absolute[1][i])
-                self.cfrs_iter_dfs(child_node, _iter, card_count)
+                self.cfrs_iter_dfs(child_node, _iter)
                 cf_values_allactions[i] = child_node.cf_values
 
             node.cf_values = arguments.Tensor(constants.players_count, game_settings.card_count).fill_(0)
@@ -147,9 +150,11 @@ class TreeCFR:
         @param node the node to update
         @param current_strategy the CFR strategy for the current iteration
         @param iter the iteration number of the current CFR iteration'''
-        if _iter > arguments.cfr_skip_iters then
-            node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0) if not node.strategy
-            node.iter_weight_sum = arguments.Tensor(game_settings.card_count).fill_(0) if not node.iter_weight_sum
+        if _iter > arguments.cfr_skip_iters:
+            if node.strategy == None:
+                node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0)
+            if node.iter_weight_sum == None:
+                node.iter_weight_sum = arguments.Tensor(game_settings.card_count).fill_(0) 
             iter_weight_contribution = node.ranges_absolute[node.current_player].clone()
             iter_weight_contribution[torch.le(iter_weight_contribution, 0)] = self.regret_epsilon
             node.iter_weight_sum.add_(iter_weight_contribution)
@@ -168,7 +173,7 @@ class TreeCFR:
         at the root node (default uniform)
         @param[opt] iter_count the number of iterations to run CFR for
         (default @{arguments.cfr_iters})'''
-        assert(starting_ranges)
+        assert starting_ranges != None
 
         root.ranges_absolute =  starting_ranges
         

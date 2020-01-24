@@ -39,14 +39,14 @@ class M:
         ''' Gets the rank of a card.
         @param card the numeric representation of the card
         @return the index of the rank'''
-        return (card - 1) // game_settings.suit_count
+        return card // game_settings.suit_count
  
     def card_to_string(self, card):
         ''' Converts a card's numeric representation to its string representation.
         @param card the numeric representation of a card
         @return the string representation of the card'''
-        assert card > 0 and card <= game_settings.card_count
-        return self.card_to_string_table[card]
+        assert card >= 0 and card < game_settings.card_count
+        return self.card_to_string_table[int(card)]
 
     def cards_to_string(self, cards):
         ''' Converts several cards' numeric representations to their string 
@@ -76,7 +76,7 @@ class M:
         card
         @return either an empty tensor or a tensor containing the numeric 
         representation of the card'''
-        assert card_string
+        # assert card_string
         
         if card_string == '':
             return arguments.Tensor()

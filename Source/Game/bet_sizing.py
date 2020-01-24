@@ -13,7 +13,7 @@ class BetSizing:
         super().__init__()
         self.pot_fractions = pot_fractions
 
-    def get_possible_bets(node):
+    def get_possible_bets(self, node):
         ''' Gives the bets which are legal at a game state.
         @param node a representation of the current game state, with fields:
         
@@ -53,10 +53,10 @@ class BetSizing:
             for i in range(self.pot_fractions.size(0)): 
                 raise_size = pot * self.pot_fractions[i]
                 if raise_size >= min_raise_size and raise_size < max_raise_size:
-                    used_bets_count = used_bets_count + 1
                     out[used_bets_count, current_player] = opponent_bet + raise_size
+                    used_bets_count = used_bets_count + 1
             # adding allin
-            used_bets_count  = used_bets_count + 1
             assert used_bets_count <= max_possible_bets_count
             out[used_bets_count, current_player] = opponent_bet + max_raise_size
+            used_bets_count  = used_bets_count + 1
             return out[:used_bets_count, :]

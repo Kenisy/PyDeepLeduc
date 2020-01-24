@@ -93,7 +93,7 @@ class M:
         ''' Gives the current betting round based on a board vector.
         @param board a possibly empty vector of board cards
         @return the current betting round'''
-        if board.dim() == 0 or board.size(0) == 0: 
+        if board.dim() == 0 or board.size(0) == 0:
             return 1
         else:
             return 2

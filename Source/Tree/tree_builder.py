@@ -19,11 +19,12 @@ Each node of the tree contains the following fields.
 * `children`. a list of children nodes
 @classmod tree_builder
 '''
+from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Game.card_tools import card_tools
 from Source.Game.card_to_string_conversion import card_to_string
-from Source.Settings.arguments import arguments
 from Source.Tree.strategy_filling import StrategyFilling
+from Source.Game.bet_sizing import BetSizing
 
 class TreeNode:
     def __init__(self):
@@ -36,6 +37,26 @@ class TreeNode:
         self.current_player = None
         self.bets = None
         self.terminal = None
+        # visualiser
+        self.margin = None
+        self.cfv_infset = None
+        self.cfv_br_infset = None
+        self.epsilon = None
+        self.lookahead_coordinates = None
+        self.ranges_absolute = None
+        self.cf_values = None
+        self.cf_values_br = None
+        # cfr
+        self.regrets = None
+        self.possitive_regrets = None
+        self.iter_weight_sum = None
+
+class TreeParams:
+    def __init__(self):
+        super().__init__()
+        self.root_node = None
+        self.bet_sizing = None
+        self.limit_to_street = None
 
 class PokerTreeBuilder:
     
@@ -109,7 +130,7 @@ class PokerTreeBuilder:
         # 1.0 fold action
         fold_node = TreeNode()
         fold_node.type = constants.node_types.terminal_fold
-        fold_node.terminal = true
+        fold_node.terminal = True
         fold_node.current_player = 1 - parent_node.current_player
         fold_node.street = parent_node.street 
         fold_node.board = parent_node.board
@@ -121,7 +142,7 @@ class PokerTreeBuilder:
         if parent_node.current_player == constants.players.P1 and (parent_node.bets[0] == parent_node.bets[1]):
             check_node = TreeNode()
             check_node.type = constants.node_types.check
-            check_node.terminal = false
+            check_node.terminal = False
             check_node.current_player = 1 - parent_node.current_player
             check_node.street = parent_node.street 
             check_node.board = parent_node.board
@@ -143,7 +164,7 @@ class PokerTreeBuilder:
         # 2.0 terminal call - either last street or allin
             terminal_call_node = TreeNode()
             terminal_call_node.type = constants.node_types.terminal_call
-            terminal_call_node.terminal = true
+            terminal_call_node.terminal = True
             terminal_call_node.current_player = 1 - parent_node.current_player
             terminal_call_node.street = parent_node.street 
             terminal_call_node.board = parent_node.board
@@ -154,9 +175,8 @@ class PokerTreeBuilder:
         # 3.0 bet actions    
         possible_bets = self.bet_sizing.get_possible_bets(parent_node)
         
-        if possible_bets.dim() != 0:
+        if possible_bets.dim() != 0 and possible_bets.size(0) > 0:
             assert possible_bets.size(1) == 2
-            
             for i in range(possible_bets.size(0)):
                 child = TreeNode()
                 child.parent = parent_node
@@ -205,7 +225,7 @@ class PokerTreeBuilder:
         for i in range(len(children)):
             children[i].parent = current_node
             self._build_tree_dfs(children[i])
-            depth = math.max(depth, children[i].depth)
+            depth = max(depth, children[i].depth)
             
             if i == 0:
                 current_node.actions[i] = constants.actions.fold
@@ -242,8 +262,9 @@ class PokerTreeBuilder:
         root.current_player = params.root_node.current_player
         root.board = params.root_node.board.clone()
         
-        # params.bet_sizing = params.bet_sizing if params.bet_sizing else BetSizing(arguments.Tensor(arguments.bet_sizing))
-        params.bet_sizing = params.bet_sizing
+        # TODO rework
+        if not params.bet_sizing:
+            params.bet_sizing = BetSizing(arguments.Tensor(arguments.bet_sizing))
 
         assert params.bet_sizing
 

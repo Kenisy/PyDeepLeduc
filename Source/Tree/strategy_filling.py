@@ -19,6 +19,7 @@ For a chance node, `strategy[i][j]` gives the probability of reaching the
 
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
+from Source.Settings.game_settings import game_settings
 from Source.Game.card_tools import card_tools
 
 class StrategyFilling:
@@ -36,7 +37,7 @@ class StrategyFilling:
         # setting probability of impossible hands to 0
         for i in range(len(node.children)):
             child_node = node.children[i]
-            mask = card_tools.get_possible_hand_indexes(child_node.board).byte()
+            mask = card_tools.get_possible_hand_indexes(child_node.board).bool()
             node.strategy[i].fill_(0)
             # remove 2 because each player holds one card
             node.strategy[i][mask] = 1.0 / (game_settings.card_count - 2)
