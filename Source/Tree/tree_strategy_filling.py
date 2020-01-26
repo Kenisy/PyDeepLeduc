@@ -17,7 +17,9 @@ For a chance node, `strategy[i][j]` gives the probability of reaching the
 @classmod tree_strategy_filling'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
+from Source.Settings.game_settings import game_settings
 from Source.Game.card_tools import card_tools
+from Source.Lookahead.resolving import Resolving
 import torch
 
 class Parameters():
@@ -181,12 +183,12 @@ class TreeStrategyFilling:
             player_action = player_actions[i]
             bet_indicator = torch.eq(node.actions, player_action)
             # there has to be exactly one equivalent bet
-            assert(bet_indicator.sum(dim=0)[0] == 1)
+            assert(bet_indicator.sum(dim=0).item() == 1)
             used_bets.add_(bet_indicator.type_as(used_bets))
 
         # check if terminal actions are used and if all player bets are used
         assert(used_bets[0] == 1 and used_bets[1] == 1)
-        assert(used_bets.sum(dim=0)[0] == player_actions.size(0))
+        assert(used_bets.sum(dim=0).item() == player_actions.size(0))
 
         # fill the strategy
         node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0)
@@ -211,7 +213,7 @@ class TreeStrategyFilling:
         range_after_action = node.strategy.clone()
         range_after_action.mul_(_range.view(1, game_settings.card_count).expand_as(range_after_action)) # new _range = _range * strategy
         # normalize the ranges
-        normalization_factor = range_after_action.sum(dim=1)
+        normalization_factor = range_after_action.sum(dim=1, keepdim=True)
         normalization_factor[torch.eq(normalization_factor, 0)] = 1
         range_after_action.div_(normalization_factor.expand_as(range_after_action))
 
@@ -220,11 +222,11 @@ class TreeStrategyFilling:
             child_node = node.children[action]
             if used_bets[action] != 0:
 
-                if not (abs(range_after_action[action].sum(dim=0)[0] - 1) < 0.001):
+                if not (abs(range_after_action[action].sum(dim=0).item() - 1) < 0.001):
                     assert range_after_action[action].sum() == 0, range_after_action[action].sum()
                     self._fill_uniformly(child_node, player)
                 else:
-                    assert(math.abs(range_after_action[action].sum(dim=0)[0] - 1) < 0.001)
+                    assert(abs(range_after_action[action].sum(dim=0).item() - 1) < 0.001)
 
                     params = Parameters()
                     params.node = child_node
@@ -233,7 +235,8 @@ class TreeStrategyFilling:
                     params.cf_values =  cf_values[action]
                     params.resolving = resolving
                     params.our_last_action = node.actions[action]
-                    params.opponent_range = opponent_range
+                    # TODO recheck
+                    # params.opponent_range = opponent_range
                     self._fill_strategies_dfs(params)
 
     def _process_chance_node(self, params):
@@ -263,7 +266,7 @@ class TreeStrategyFilling:
             child_range = _range.clone()
             mask = card_tools.get_possible_hand_indexes(child_node.board)
             child_range.mul_(mask)
-            range_weight = child_range.sum(dim=0)[0] # weight should be single number
+            range_weight = child_range.sum(dim=0).item() # weight should be single number
             child_range.mul_(1/range_weight)
 
             # we should never touch same re-solving again after the chance action, set it to None
