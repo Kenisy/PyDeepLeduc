@@ -22,7 +22,7 @@ class M:
         assert hand.min() >= 0 and hand.max() < game_settings.card_count, 'Illegal cards in hand'
         used_cards = torch.zeros(game_settings.card_count)
         for i in range(hand.size(0)): 
-            used_cards[hand[i]] = used_cards[hand[i]] + 1
+            used_cards[hand[i].item()] = used_cards[hand[i].item()] + 1
         return used_cards.max() < 2
 
     def get_possible_hand_indexes(self, board):
@@ -153,7 +153,7 @@ class M:
         @return the numerical index for the board'''
         index = self._board_index_table
         for i in range(board.size(0)):
-            index = index[board[i]]
+            index = index[board[i].item()]
         assert index > 0, index
         return index
 

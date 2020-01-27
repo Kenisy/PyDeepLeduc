@@ -19,4 +19,4 @@ if __name__ == "__main__":
 
     visualiser = TreeVisualiser()
 
-    visualiser.graphviz(tree, "simple_tree")
+    visualiser.graphviz(tree, "tree_visualiser")

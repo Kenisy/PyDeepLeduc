@@ -214,6 +214,7 @@ class TreeVisualiser:
         out = out + '}'
             
         # write into dot file
+        filename = arguments.project_root + "/Data/Dot/" + filename + '.dot'
         with open(filename, 'w') as f:
             f.write(out)
 

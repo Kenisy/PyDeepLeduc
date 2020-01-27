@@ -9,6 +9,7 @@ from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
 from Source.TerminalEquity.terminal_equity import TerminalEquity
+from tqdm import tqdm
 import torch
 
 class TreeCFR:
@@ -54,9 +55,9 @@ class TreeCFR:
             values = node.ranges_absolute.clone().fill_(0)
 
             if(node.type == constants.node_types.terminal_fold):
-                values = terminal_equity.tree_node_fold_value(node.ranges_absolute, values, opponent_index)
+                terminal_equity.tree_node_fold_value(node.ranges_absolute, values, opponent_index)
             else:
-                values = terminal_equity.tree_node_call_value(node.ranges_absolute, values)
+                terminal_equity.tree_node_call_value(node.ranges_absolute, values)
 
             # multiply by the pot
             values = values * node.pot
@@ -177,5 +178,5 @@ class TreeCFR:
 
         root.ranges_absolute =  starting_ranges
         
-        for i in range(iter_count): 
+        for i in tqdm(range(iter_count)): 
             self.cfrs_iter_dfs(root, i)

@@ -27,7 +27,7 @@ class M:
             hand_value = hand_ranks[0]
         else:
             # hand is a high card    
-            hand_value = hand_ranks[0] * game_settings.rank_count + hand_ranks[1]
+            hand_value = (hand_ranks[0] + 1) * game_settings.rank_count + hand_ranks[1]
         return hand_value
 
     def evaluate_three_card_hand(self, hand_ranks):

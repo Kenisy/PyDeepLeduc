@@ -99,9 +99,9 @@ class TreeValues:
             values = node.ranges_absolute.clone().fill_(0)
 
             if(node.type == constants.node_types.terminal_fold):
-                values = self.terminal_equity.tree_node_fold_value(node.ranges_absolute, values, 1-node.current_player)
+                self.terminal_equity.tree_node_fold_value(node.ranges_absolute, values, 1-node.current_player)
             else:
-                values = self.terminal_equity.tree_node_call_value(node.ranges_absolute, values)
+                self.terminal_equity.tree_node_call_value(node.ranges_absolute, values)
 
             # multiply by the pot
             values = values * node.pot
@@ -131,9 +131,6 @@ class TreeValues:
 
             # compute CFVs given the current strategy for this node
             if node.current_player == constants.players.chance:
-                # TODO rework need check logic
-                # node.cf_values = cf_values_allactions.sum(dim=0)[0]
-                # node.cf_values_br = cf_values_br_allactions.sum(dim=0)[0]
                 node.cf_values = cf_values_allactions.sum(dim=0)
                 node.cf_values_br = cf_values_br_allactions.sum(dim=0)
             else:

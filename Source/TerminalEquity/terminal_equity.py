@@ -103,8 +103,7 @@ class TerminalEquity:
         @param ranges a batch of opponent ranges in an NxK tensor, where N is the batch size
         and K is the range size
         @param result a NxK tensor in which to save the cfvs '''
-        result = torch.mm(ranges, self.equity_matrix)
-        return result
+        torch.mm(ranges, self.equity_matrix, out=result)
 
     def fold_value(self, ranges, result ):
         ''' Computes (a batch of) counterfactual values that a player achieves at a terminal node
@@ -116,8 +115,7 @@ class TerminalEquity:
         and K is the range size
         @param result A NxK tensor in which to save the cfvs. Positive cfvs are returned, and
         must be negated if the player in question folded. '''
-        result = torch.mm(ranges, self.fold_matrix)
-        return result
+        torch.mm(ranges, self.fold_matrix, out=result)
 
     def get_call_matrix(self):
         ''' Returns the matrix which gives showdown equity for any ranges.
@@ -139,9 +137,8 @@ class TerminalEquity:
         @param result a 2xK tensor in which to store the cfvs for each player '''
         assert ranges.dim() == 2
         assert result.dim() == 2
-        result[1] = self.call_value(ranges[0].view(1,  -1), result[1].view(1,  -1)) 
-        result[0] = self.call_value(ranges[1].view(1,  -1), result[0].view(1,  -1))
-        return result
+        self.call_value(ranges[0].view(1,  -1), result[1].view(1,  -1)) 
+        self.call_value(ranges[1].view(1,  -1), result[0].view(1,  -1))
 
     def tree_node_fold_value(self, ranges, result, folding_player ):
         ''' Computes the counterfactual values that both players achieve at a terminal node
@@ -154,8 +151,7 @@ class TerminalEquity:
         @param folding_player which player folded '''
         assert ranges.dim() == 2
         assert result.dim() == 2
-        result[1] = self.fold_value(ranges[0].view(1,  -1), result[1].view(1,  -1)) 
-        result[0] = self.fold_value(ranges[1].view(1,  -1), result[0].view(1,  -1))
+        self.fold_value(ranges[0].view(1,  -1), result[1].view(1,  -1)) 
+        self.fold_value(ranges[1].view(1,  -1), result[0].view(1,  -1))
         
         result[folding_player].mul_(-1)
-        return result

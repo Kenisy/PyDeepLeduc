@@ -1,5 +1,8 @@
 import torch
+import os
 class params:
+    # root folder of project
+    project_root = os.path.dirname(os.path.realpath(__file__)) + '/../..'
     # whether to run on GPU
     gpu = False
     # the tensor datatype used for storing DeepStack's internal data
@@ -22,9 +25,11 @@ class params:
     # how many poker situations are used in each neural net training batch
     train_batch_size = 100
     # path to the solved poker situation data used to train the neural net
-    data_path = '../Data/TrainSamples/'
+    data_path = project_root + '/Data/TrainSamples/'
     # path to the neural net model
-    model_path = '../Data/Models/'
+    model_path = project_root + '/Data/Models/'
+    # the name of the neural net file
+    value_net_name = 'final'
     # the neural net architecture
     net = [500, 500, 500]
     # how many epochs to train for

@@ -37,4 +37,4 @@ if __name__ == "__main__":
     print('Exploitability: ' + str(tree.exploitability.item()) + '[chips]' )
 
     visualiser = TreeVisualiser()
-    visualiser.graphviz(tree, "simple_tree")
+    visualiser.graphviz(tree, "tree_strategy_filling")
