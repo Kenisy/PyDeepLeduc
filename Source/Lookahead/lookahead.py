@@ -9,9 +9,19 @@ from Source.TerminalEquity.terminal_equity import TerminalEquity
 from Source.Lookahead.cfrd_gadget import CFRDGadget
 import torch
 
+class ResolveResult:
+    def __init__(self):
+        super().__init__()
+        self.strategy = None
+        self.achieved_cfvs = None
+        self.root_cfvs = None
+        self.root_cfvs_both_players = None
+        self.children_cfvs = None
+
 class Lookahead:
     def __init__(self):
         super().__init__()
+        self.reconstruction_opponent_cfvs = None
         self.builder = LookaheadBuilder(self)
 
     def build_lookahead(self, tree):
@@ -81,7 +91,8 @@ class Lookahead:
         @local'''
         for d in range(1, self.depth):
             self.positive_regrets_data[d].copy_(self.regrets_data[d])
-            self.positive_regrets_data[d].clamp_(self.regret_epsilon, tools.max_number())
+            # TODO rework
+            self.positive_regrets_data[d].clamp_(self.regret_epsilon, constants.max_number)
 
             # 1.0 set regret of empty actions to 0
             self.positive_regrets_data[d].mul_(self.empty_action_mask[d])
@@ -89,12 +100,12 @@ class Lookahead:
             # 1.1  regret matching
             # note that the regrets as well as the CFVs have switched player indexing
             # TODO recheck
-            self.regrets_sum[d] = torch.sum(self.positive_regrets_data[d], 1)
+            self.regrets_sum[d] = self.positive_regrets_data[d].sum(dim=0)
             player_current_strategy = self.current_strategy_data[d]
             player_regrets = self.positive_regrets_data[d]
             player_regrets_sum = self.regrets_sum[d]
 
-            player_current_strategy.div_(player_regrets, player_regrets_sum.expand_as(player_regrets))
+            torch.div(player_regrets, player_regrets_sum.expand_as(player_regrets), out=player_current_strategy)
 
     def _compute_ranges(self):
         ''' Using the players' current strategies, computes their probabilities of
@@ -113,7 +124,7 @@ class Lookahead:
 
             # copy the ranges of inner nodes and transpose
             # TODO recheck
-            self.inner_nodes[d].copy_(current_level_ranges[prev_layer_terminal_actions_count: -1, : gp_layer_nonallin_bets_count, :, :, :].transpose(2,3))
+            self.inner_nodes[d].copy_(current_level_ranges[prev_layer_terminal_actions_count :, : gp_layer_nonallin_bets_count, :, :, :].transpose(1,2).view(self.inner_nodes[d].shape))
 
             super_view = self.inner_nodes[d]
             super_view = super_view.view(1, prev_layer_bets_count, -1, constants.players_count, game_settings.card_count)
@@ -124,7 +135,7 @@ class Lookahead:
             next_level_ranges.copy_(super_view)
 
             # multiply the ranges of the acting player by his strategy
-            next_level_ranges[:, :, :, self.acting_player[d], :].mul_(next_level_strategies)
+            next_level_ranges[:, :, :, int(self.acting_player[d].item()), :].mul_(next_level_strategies)
 
     def _compute_update_average_strategies(self, _iter):
         ''' Updates the players' average strategies with their current strategies.
@@ -261,7 +272,7 @@ class Lookahead:
         ''' Using the players' reach probabilities and terminal counterfactual
         values, computes their cfvs at all states of the lookahead.
         @local'''
-        for d in range(self.depth-1, 1, -1):
+        for d in range(self.depth-1, 0, -1):
             gp_layer_terminal_actions_count = self.terminal_actions_count[d-2]
             ggp_layer_nonallin_bets_count = self.nonallinbets_count[d-3]
 
@@ -271,15 +282,15 @@ class Lookahead:
             self.placeholder_data[d].copy_(self.cfvs_data[d])
 
             # player indexing is swapped for cfvs
-            self.placeholder_data[d][:, :, :, self.acting_player[d], :].mul_(self.current_strategy_data[d])
+            self.placeholder_data[d][:, :, :, int(self.acting_player[d].item()), :].mul_(self.current_strategy_data[d])
 
             # TODO recheck
-            self.regrets_sum[d] = torch.sum(self.placeholder_data[d], 1)
+            self.regrets_sum[d] = self.placeholder_data[d].sum(dim=0, keepdim=True)
 
             # use a swap placeholder to change {{1,2,3}, {4,5,6}} into {{1,2}, {3,4}, {5,6}}
             swap = self.swap_data[d-1]
-            swap.copy_(self.regrets_sum[d])
-            self.cfvs_data[d-1][gp_layer_terminal_actions_count: -1, : ggp_layer_nonallin_bets_count, :, :, :].copy_(swap.transpose(2,3))
+            swap.copy_(self.regrets_sum[d].view(swap.shape))
+            self.cfvs_data[d-1][gp_layer_terminal_actions_count :, : ggp_layer_nonallin_bets_count, :, :, :].copy_(swap.transpose(1,2))
 
     def _compute_cumulate_average_cfvs(self, _iter):
         ''' Updates the players' average counterfactual values with their cfvs from the
@@ -302,7 +313,7 @@ class Lookahead:
         player_avg_strategy_sum = self.regrets_sum[1]
 
         # TODO recheck
-        player_avg_strategy_sum = torch.sum(player_avg_strategy, 1)
+        player_avg_strategy_sum = player_avg_strategy.sum(dim=0)
         player_avg_strategy.div_(player_avg_strategy_sum.expand_as(player_avg_strategy))
         
         # if the strategy is 'empty' (zero reach), strategy does not matter but we need to make sure
@@ -322,27 +333,27 @@ class Lookahead:
         ''' Using the players' counterfactual values, updates their total regrets
         for every state in the lookahead.
         @local'''
-        for d in range(self.depth-1, 1, -1):
+        for d in range(self.depth-1, 0, -1):
             gp_layer_terminal_actions_count = self.terminal_actions_count[d-2]
             gp_layer_bets_count = self.bets_count[d-2]
             ggp_layer_nonallin_bets_count = self.nonallinbets_count[d-3]
 
             current_regrets = self.current_regrets_data[d]
-            current_regrets.copy_(self.cfvs_data[d][:, :, :, self.acting_player[d], :])
+            current_regrets.copy_(self.cfvs_data[d][:, :, :, int(self.acting_player[d].item()), :])
 
             next_level_cfvs = self.cfvs_data[d-1]
 
             parent_inner_nodes = self.inner_nodes_p1[d-1]
-            parent_inner_nodes.copy_(next_level_cfvs[gp_layer_terminal_actions_count : -1, : ggp_layer_nonallin_bets_count, :, self.acting_player[d], :].transpose(2,3))
+            parent_inner_nodes.copy_(next_level_cfvs[gp_layer_terminal_actions_count :, : ggp_layer_nonallin_bets_count, :, int(self.acting_player[d].item()), :].transpose(1,2).view(parent_inner_nodes.shape))
             parent_inner_nodes = parent_inner_nodes.view(1, gp_layer_bets_count, -1, game_settings.card_count)
             parent_inner_nodes = parent_inner_nodes.expand_as(current_regrets)
 
             current_regrets.sub_(parent_inner_nodes)
             
-            self.regrets_data[d].add_(self.regrets_data[d], current_regrets)
+            self.regrets_data[d] = torch.add(self.regrets_data[d], current_regrets)
 
             # (CFR+)
-            self.regrets_data[d].clamp_(0,  tools.max_number())
+            self.regrets_data[d].clamp_(0, constants.max_number)
 
 
     def get_results(self):
@@ -361,7 +372,7 @@ class Lookahead:
 
         * `children_cfvs`. an AxK tensor of opponent average counterfactual values after
         each action that the re-solve player can take at the root of the lookahead'''
-        out = {}
+        out = ResolveResult()
         
         actions_count = self.average_strategies_data[1].size(0)
 
@@ -400,9 +411,9 @@ class Lookahead:
         
         out.children_cfvs.div_(scaler)  
         
-        assert(out.strategy)
-        assert(out.achieved_cfvs)
-        assert(out.children_cfvs)
+        assert(out.strategy != None)
+        assert(out.achieved_cfvs != None)
+        assert(out.children_cfvs != None)
         
         return out
 

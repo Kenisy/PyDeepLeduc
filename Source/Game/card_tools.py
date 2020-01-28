@@ -154,7 +154,7 @@ class M:
         index = self._board_index_table
         for i in range(board.size(0)):
             index = index[board[i].item()]
-        assert index > 0, index
+        assert index >= 0, index
         return index
 
     def normalize_range(self, board, _range):

@@ -148,12 +148,12 @@ class LookaheadBuilder:
 
         # data structures for inner nodes (not terminal nor allin) [bets_count x parent_nonallinbetscount x gp_id x batch x players x range]
         self.lookahead.inner_nodes[0] = arguments.Tensor(1, 1, 1, constants.players_count, game_settings.card_count).fill_(0)
-        self.lookahead.swap_data[0] = self.lookahead.inner_nodes[0].transpose(2,3).clone()
+        self.lookahead.swap_data[0] = self.lookahead.inner_nodes[0].transpose(1,2).clone()
         self.lookahead.inner_nodes_p1[0] = arguments.Tensor(1, 1, 1, 1, game_settings.card_count).fill_(0)
         
         if self.lookahead.depth > 1:
             self.lookahead.inner_nodes[1] = arguments.Tensor(self.lookahead.bets_count[0], 1, 1, constants.players_count, game_settings.card_count).fill_(0)  
-            self.lookahead.swap_data[1] = self.lookahead.inner_nodes[1].transpose(2,3).clone()
+            self.lookahead.swap_data[1] = self.lookahead.inner_nodes[1].transpose(1,2).clone()
             self.lookahead.inner_nodes_p1[1] = arguments.Tensor(self.lookahead.bets_count[0], 1, 1, 1, game_settings.card_count).fill_(0)
 
 
@@ -182,7 +182,7 @@ class LookaheadBuilder:
                 self.lookahead.inner_nodes[d] = arguments.Tensor(self.lookahead.bets_count[d-1], self.lookahead.nonallinbets_count[d-2], self.lookahead.nonterminal_nonallin_nodes_count[d-2], constants.players_count, game_settings.card_count).fill_(0)
                 self.lookahead.inner_nodes_p1[d] = arguments.Tensor(self.lookahead.bets_count[d-1], self.lookahead.nonallinbets_count[d-2], self.lookahead.nonterminal_nonallin_nodes_count[d-2], 1, game_settings.card_count).fill_(0)
 
-                self.lookahead.swap_data[d] = self.lookahead.inner_nodes[d].transpose(2, 3).clone()
+                self.lookahead.swap_data[d] = self.lookahead.inner_nodes[d].transpose(1, 2).clone()
 
     def set_datastructures_from_tree_dfs(self, node, layer, action_id, parent_id, gp_id):
         ''' Traverses the tree to fill in lookahead data structures that summarize data

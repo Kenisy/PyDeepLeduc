@@ -5,3 +5,5 @@
 /.vscode
 /Source/Tree/__pycache__
 /Source/Lookahead/__pycache__
+/Source/DataGeneration/__pycache__
+/Source/Nn/__pycache__

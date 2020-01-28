@@ -36,4 +36,7 @@ class constants:
         ccall = -1
     actions = actions()
 
+    # max numer
+    max_number = 999999
+
 constants = constants()
