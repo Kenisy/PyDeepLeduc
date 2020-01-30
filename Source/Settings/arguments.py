@@ -32,6 +32,8 @@ class params:
     value_net_name = 'final'
     # the neural net architecture
     net = [500, 500, 500]
+    # how often to save the model during training
+    save_epoch = 2
     # how many epochs to train for
     epoch_count = 10
     # how many solved poker situations are generated for use as training examples

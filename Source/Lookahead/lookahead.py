@@ -327,7 +327,7 @@ class Lookahead:
         Used at the end of re-solving so that we can track un-normalized average
         cfvs, which are simpler to compute.
         @local'''
-        self.average_cfvs_data[0].div(arguments.cfr_iters - arguments.cfr_skip_iters)
+        self.average_cfvs_data[0].div_(arguments.cfr_iters - arguments.cfr_skip_iters)
 
     def _compute_regrets(self):
         ''' Using the players' counterfactual values, updates their total regrets

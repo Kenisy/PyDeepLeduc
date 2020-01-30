@@ -83,7 +83,7 @@ class M:
             
             # translating ranges to features 
             pot_feature_index =  -1
-            inputs[batch * batch_size : (batch + 1) * batch_size, pot_feature_index]:copy_(pot_sizes)
+            inputs[batch * batch_size : (batch + 1) * batch_size, pot_feature_index].copy_(pot_size_features.squeeze(1))
             for player in range(constants.players_count):
                 bucket_conversion.card_range_to_bucket_range(ranges[player], inputs[batch * batch_size : (batch + 1) * batch_size, player * bucket_count : (player + 1) * bucket_count])
             

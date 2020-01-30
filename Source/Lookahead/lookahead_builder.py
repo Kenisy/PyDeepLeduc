@@ -251,7 +251,10 @@ class LookaheadBuilder:
                         self.set_datastructures_from_tree_dfs(node.children[len(node.children)-b-1], layer+1, self.lookahead.actions_count[layer]-b-1, next_parent_id, next_gp_id)
                     
                     # mask out empty actions
-                    self.lookahead.empty_action_mask[layer+1][terminal_actions_count:-(existing_bets_count+1), next_parent_id, next_gp_id, :] = 0
+                    if existing_bets_count == 0: 
+                        self.lookahead.empty_action_mask[layer+1][terminal_actions_count:, next_parent_id, next_gp_id, :] = 0
+                    else:
+                        self.lookahead.empty_action_mask[layer+1][terminal_actions_count:-existing_bets_count, next_parent_id, next_gp_id, :] = 0
                 
                 else:
                     # node has full action count, easy to handle
