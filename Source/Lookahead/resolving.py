@@ -68,7 +68,7 @@ class Resolving:
         @param action a legal action at the node
         @return the index of the action
         @local'''
-        actions = self.get_possible_actions(action)
+        actions = self.get_possible_actions()
         action_id = -1
         for i in range(actions.size(0)):
             if action == actions[i]:

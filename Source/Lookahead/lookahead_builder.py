@@ -4,11 +4,12 @@ from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
 from Source.Nn.value_nn import ValueNn
+from Source.Nn.next_round_value import NextRoundValue
 import torch
 
+neural_net = None
 class LookaheadBuilder:
     # used to load NN only once
-    neural_net = None
 
     def __init__(self, lookahead):
         ''' Constructor
@@ -23,14 +24,15 @@ class LookaheadBuilder:
         ''' Builds the neural net query boxes which estimate counterfactual values
         at depth-limited states of the lookahead.
         @local'''
+        global neural_net
         if self.lookahead.tree.street == 2:
             return
         
         # load neural net if not already loaded
-        if not self.neural_net:  
-            self.neural_net = ValueNn()
+        if not neural_net:  
+            neural_net = ValueNn()
         
-        self.lookahead.next_street_boxes = arguments.Tensor(self.lookahead.depth)
+        self.lookahead.next_street_boxes = {}
         for d in range(1, self.lookahead.depth):
             self.lookahead.next_street_boxes[d] = NextRoundValue(neural_net)
             self.lookahead.next_street_boxes[d].start_computation(self.lookahead.pot_size[d][1, :, :, 0, 0].clone().view(-1))
@@ -46,7 +48,7 @@ class LookaheadBuilder:
 
         # which player acts at particular depth
         self.lookahead.acting_player = torch.Tensor(self.lookahead.depth+1).fill_(-1)
-        self.lookahead.acting_player[0] = 1 # in lookahead, 1 does not stand for player IDs, it's just the first player to act
+        self.lookahead.acting_player[0] = 0 # in lookahead, 1 does not stand for player IDs, it's just the first player to act
         for d in range(1, self.lookahead.depth+1):
             self.lookahead.acting_player[d] = 1 - self.lookahead.acting_player[d-1]
 
@@ -215,8 +217,11 @@ class LookaheadBuilder:
             prev_layer_bets_count = self.lookahead.bets_count[layer - 1]
             
             # compute next coordinates for parent and grandparent
+            # TODO recheck
             next_parent_id = action_id - prev_layer_terminal_actions_count
             next_gp_id = (gp_id) * gp_nonallinbets_count + (parent_id)
+            # print(f'\n {action_id+1} {prev_layer_terminal_actions_count}')
+            # print(f'{gp_id+1} {gp_nonallinbets_count} {parent_id+1}')
 
             if (not node.terminal) and (node.current_player != constants.players.chance):
             
@@ -227,6 +232,7 @@ class LookaheadBuilder:
                 node_with_empty_actions = (len(node.children) < self.lookahead.actions_count[layer])
                 
                 if node_with_empty_actions:
+                    # print('test')
                     # we need to mask nonexisting padded bets
                     assert(layer > 0)
 

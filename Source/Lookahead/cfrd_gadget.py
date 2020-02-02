@@ -5,6 +5,8 @@ See [Solving Imperfect Information Games Using Decomposition](http.//poker.cs.ua
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Game.card_tools import card_tools
+from Source.Settings.game_settings import game_settings
+import torch
 
 class CFRDGadget:
     def __init__(self, board, player_range, opponent_cfvs):
@@ -13,7 +15,7 @@ class CFRDGadget:
         @param player_range an initial range vector for the opponent
         @param opponent_cfvs the opponent counterfactual values vector used for re-solving'''
         super().__init__()
-        assert(board)
+        assert(board != None)
 
         self.input_opponent_range = player_range.clone()
         self.input_opponent_value = opponent_cfvs.clone()
@@ -57,18 +59,18 @@ class CFRDGadget:
         self.total_values.add_(self.total_values_p2)
         
         self.play_current_regret = play_values.clone()
-        self.play_current_regret.sub_(self.total_values)
+        self.play_current_regret.sub_(self.total_values.view(self.play_current_regret.shape))
         
         self.terminate_current_regret = terminate_values.clone()
-        self.terminate_current_regret.sub_(self.total_values)
+        self.terminate_current_regret.sub_(self.total_values.view(self.terminate_current_regret.shape))
 
         # 1.1 cumulate regrets
-        self.play_regrets.add_(self.play_current_regret)
+        self.play_regrets.add_(self.play_current_regret.view(self.play_regrets.shape))
         self.terminate_regrets.add_(self.terminate_current_regret)
         
         # 2.0 we use cfr+ in reconstruction  
-        self.terminate_regrets.clamp_(self.regret_epsilon, tools.max_number())
-        self.play_regrets.clamp_(self.regret_epsilon, tools.max_number())
+        self.terminate_regrets.clamp_(self.regret_epsilon, constants.max_number)
+        self.play_regrets.clamp_(self.regret_epsilon, constants.max_number)
 
         self.play_possitive_regrets = self.play_regrets
         self.terminate_possitive_regrets = self.terminate_regrets

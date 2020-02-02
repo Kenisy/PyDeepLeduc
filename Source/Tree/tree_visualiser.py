@@ -116,7 +116,7 @@ class TreeVisualiser:
             out.label = out.label +  '| epsilon1: ' + str(node.epsilon[0].item())
             out.label = out.label +  '| epsilon2: ' + str(node.epsilon[1].item())
         
-        if node.lookahead_coordinates:
+        if node.lookahead_coordinates != None:
             out.label = out.label +  '| COORDINATES '
             out.label = out.label +  '| action_id: ' + str(node.lookahead_coordinates[0].item())
             out.label = out.label +  '| parent_action_id: ' + str(node.lookahead_coordinates[1].item())

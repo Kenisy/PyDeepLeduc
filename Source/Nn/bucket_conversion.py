@@ -21,7 +21,7 @@ class BucketConversion:
         class_ids = class_ids.float()
 
         class_ids = class_ids.view(1, self.bucket_count).expand(game_settings.card_count, self.bucket_count)
-        card_buckets = buckets.view(game_settings.card_count, 1).expand(game_settings.card_count, self.bucket_count)\
+        card_buckets = buckets.view(game_settings.card_count, 1).expand(game_settings.card_count, self.bucket_count)
 
         # finding all strength classes      
         # matrix for transformation from card ranges to strength class ranges 

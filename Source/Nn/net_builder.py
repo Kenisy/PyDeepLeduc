@@ -21,8 +21,6 @@ class Net(nn.Module):
     def forward(self, x):
         feedforward = x.clone()
         ranges = x.narrow(1, 0, self.output_size)
-        mask = ranges.clone().bool()
-        mask[ranges > 0] = 1
 
         for i in range(len(self.fc)):
             feedforward = self.fc[i](feedforward)
@@ -30,9 +28,9 @@ class Net(nn.Module):
             feedforward = nn.ReLU()(feedforward)
 
         feedforward = self.fc1(feedforward)
-        # values = torch.mul(feedforward, mask)
-        # estimated_value = torch.bmm(values.unsqueeze(1), ranges.unsqueeze(2)).squeeze(2)
-        # estimated_value = torch.div(estimated_value, 2)
-        # outputs = torch.sub(values, estimated_value)
-        return feedforward
+        estimated_value = torch.bmm(feedforward.unsqueeze(1), ranges.unsqueeze(2)).squeeze(2)
+        estimated_value = estimated_value.repeat(1, self.output_size)
+        estimated_value = torch.mul(estimated_value, -0.5)
+        final_mlp = torch.add(feedforward, estimated_value)
+        return final_mlp
         

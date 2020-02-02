@@ -21,10 +21,11 @@ class ValueNn:
         print('NN architecture:')
         print(self.mlp)
         
-    def get_value(inputs, output):
+    def get_value(self, inputs, output):
         ''' Gives the neural net output for a batch of inputs.
         @param inputs An NxI tensor containing N instances of neural net inputs. 
         See @{net_builder} for details of each input.
         @param output An NxO tensor in which to store N sets of neural net outputs. 
         See @{net_builder} for details of each output.'''
-        output.copy_(self.mlp(inputs))
+        with torch.no_grad():
+            output.copy_(self.mlp(inputs))

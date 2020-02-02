@@ -71,7 +71,7 @@ class M:
         @return a range vector where invalid hands are given 0 probability, each
         valid hand is given a probability randomly sampled from the uniform
         distribution on [0,1), and the resulting range is normalized'''
-        # seed = seed or torch.random()
+        torch.manual_seed(seed)
         out = torch.rand(game_settings.card_count)
         out.mul_(self.get_possible_hand_indexes(board))
         out.div_(out.sum())
@@ -104,12 +104,12 @@ class M:
         the number of cards on each board'''
         boards_count = self.get_boards_count()
         if game_settings.board_card_count == 1:
-            out = arguments.Tensor(boards_count, 1)
+            out = arguments.IntTensor(boards_count, 1)
             for card in range(game_settings.card_count): 
                 out[card, 0] = card
             return out
         elif game_settings.board_card_count == 2:
-            out = arguments.Tensor(boards_count, 2)
+            out = arguments.IntTensor(boards_count, 2)
             board_idx = 0 
             for card_1 in range(game_settings.card_count): 
                 for card_2 in range(card_1 + 1, game_settings.card_count): 

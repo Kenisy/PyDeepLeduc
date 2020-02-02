@@ -22,6 +22,8 @@ class Lookahead:
     def __init__(self):
         super().__init__()
         self.reconstruction_opponent_cfvs = None
+        self.next_street_boxes_inputs = None
+        self.next_street_boxes_outputs = None
         self.builder = LookaheadBuilder(self)
 
     def build_lookahead(self, tree):
@@ -58,8 +60,8 @@ class Lookahead:
         @param player_range a range vector for the re-solving player
         @param opponent_cfvs a vector of cfvs achieved by the opponent
         before re-solving'''
-        assert(player_range)
-        assert(opponent_cfvs)
+        assert(player_range != None)
+        assert(opponent_cfvs != None)
         
         self.reconstruction_gadget = CFRDGadget(self.tree.board, player_range, opponent_cfvs)
         
@@ -141,7 +143,7 @@ class Lookahead:
         ''' Updates the players' average strategies with their current strategies.
         @param iter the current iteration number of re-solving
         @local'''
-        if _iter > arguments.cfr_skip_iters:
+        if _iter >= arguments.cfr_skip_iters:
             # no need to go through layers since we care for the average strategy only in the first node anyway
             # note that if you wanted to average strategy on lower layers, you would need to weight the current strategy by the current reach probability
             self.average_strategies_data[1].add_(self.current_strategy_data[1])
@@ -166,7 +168,7 @@ class Lookahead:
             self.terminal_equity.fold_value(self.ranges_data[d][0].view(-1, game_settings.card_count), self.cfvs_data[d][0].view(-1, game_settings.card_count))  
 
             # correctly set the folded player by mutliplying by -1
-            fold_mutliplier = (self.acting_player[d]*2 - 3)
+            fold_mutliplier = (self.acting_player[d]*2 - 1)
             self.cfvs_data[d][0, :, :, 0, :].mul_(fold_mutliplier)
             self.cfvs_data[d][0, :, :, 1, :].mul_(-fold_mutliplier)
 
@@ -184,13 +186,14 @@ class Lookahead:
                 if self.next_street_boxes_outputs == None:
                     self.next_street_boxes_outputs = {}
                 
-                if self.next_street_boxes_inputs[d] == None: 
+                if not d in self.next_street_boxes_inputs: 
                     self.next_street_boxes_inputs[d] = self.ranges_data[d][1, :, :, :, :].view(-1, constants.players_count, game_settings.card_count).clone().fill_(0)
-                if self.next_street_boxes_outputs[d] == None: 
+                if not d in self.next_street_boxes_outputs: 
                     self.next_street_boxes_outputs[d] = self.next_street_boxes_inputs[d].clone()
                 
                 # now the neural net accepts the input for P1 and P2 respectively, so we need to swap the ranges if necessary
-                self.next_street_boxes_outputs[d].copy_(self.ranges_data[d][1, :, :, :, :])
+                # TODO recheck
+                self.next_street_boxes_outputs[d].copy_(self.ranges_data[d][1, :, :, :, :].view(self.next_street_boxes_outputs[d].shape))
                 
                 if self.tree.current_player == 0:
                     self.next_street_boxes_inputs[d].copy_(self.next_street_boxes_outputs[d])
@@ -207,7 +210,7 @@ class Lookahead:
                     self.next_street_boxes_outputs[d][:, 0, :].copy_(self.next_street_boxes_inputs[d][:, 1, :])
                     self.next_street_boxes_outputs[d][:, 1, :].copy_(self.next_street_boxes_inputs[d][:, 0, :])
                 
-                self.cfvs_data[d][1, :, :, :, :].copy_(self.next_street_boxes_outputs[d])
+                self.cfvs_data[d][1, :, :, :, :].copy_(self.next_street_boxes_outputs[d].view(self.cfvs_data[d][1, :, :, :, :].shape))
 
     def get_chance_action_cfv(self, action_index, board):
         ''' Gives the average counterfactual values for the opponent during re-solving 
@@ -225,13 +228,13 @@ class Lookahead:
         batch_index = None
         pot_mult = None
         
-        assert(not ((action_index == 2) and (self.first_call_terminal)))
+        assert(not ((action_index == 1) and (self.first_call_terminal)))
         
         # check if we should not use the first layer for transition call
-        if action_index == 2 and self.first_call_transition != None:
+        if action_index == 1 and self.first_call_transition:
             box_outputs = self.next_street_boxes_inputs[1].clone().fill_(0)
             assert(box_outputs.size(0) == 1)
-            batch_index = 1
+            batch_index = 0
             next_street_box = self.next_street_boxes[1]
             pot_mult = self.pot_size[1][1]
         else:
@@ -248,7 +251,7 @@ class Lookahead:
             assert(False)
         next_street_box.get_value_on_board(board, box_outputs)
         
-        box_outputs.mul_(pot_mult)
+        box_outputs.mul_(pot_mult.view(box_outputs.shape))
         
         out = box_outputs[batch_index][1-self.tree.current_player]
         return out
@@ -422,7 +425,7 @@ class Lookahead:
         the @{cfrd_gadget|CFRDGadget}.
         @param iteration the current iteration number of re-solving
         @local'''
-        if self.reconstruction_opponent_cfvs:
+        if self.reconstruction_opponent_cfvs != None:
             # note that CFVs indexing is swapped, thus the CFVs for the reconstruction player are for player '1'
             opponent_range = self.reconstruction_gadget.compute_opponent_range(self.cfvs_data[0][:, :, :, 0, :], iteration)
             self.ranges_data[0][:, :, :, 1, :].copy_(opponent_range)
