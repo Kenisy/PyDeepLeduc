@@ -6,21 +6,29 @@ possible on a given board.
 
 from Source.Settings.arguments import arguments
 import torch.nn as nn
+import torch
 
-class MaskedHuberLoss(nn.Module):
-    def __init__(self):
-        super(MaskedHuberLoss, self).__init__()
-        self.criterion = nn.SmoothL1Loss()
-        self.mask_sum = None
+def smoothL1LossForward(outputs, targets):
+    n = torch.abs(outputs - targets)
+    beta = 1
+    cond = n < beta
+    z = torch.where(cond, 0.5 * n ** 2 / beta, n - 0.5 * beta)
+    return z.mean()
 
-    def cuda(self):
-        ''' Moves the torch criterion (used for loss and gradient computation) 
-        to the GPU.
-        @return the MaskedHuberLoss object that `cuda()` is called on'''
-        self.criterion = self.criterion.cuda()
-        return self
+def smoothL1LossGrad(outputs, targets):
+    d = outputs - targets
+    n = torch.abs(d)
+    dloss_dn = n.clone()
+    dloss_dn[n <= -1] = -1
+    dloss_dn[n > 1] = 1
+    dn_doutput = d / (n + 1e-10)
+    dloss_doutput = dloss_dn / n.nelement() * dn_doutput
+    return dloss_doutput
 
-    def forward(self, outputs, targets, mask):
+class MaskedHuberLoss(torch.autograd.Function):
+
+    @staticmethod
+    def forward(ctx, outputs, targets, mask):
         ''' Computes the loss over a batch of neural net outputs and targets.
 
         @param outputs an NxM tensor containing N vectors of values over buckets,
@@ -38,32 +46,34 @@ class MaskedHuberLoss(nn.Module):
         outputs.mul_(mask)
         targets.mul_(mask)
         
-        loss = self.criterion.forward(outputs, targets)
+        loss = smoothL1LossForward(outputs, targets)
         
         # 2.0 if the batch size has changed, create new storage for the sum, otherwise reuse
-        if self.mask_sum == None or (self.mask_sum.size(0) != batch_size):
-            self.mask_placeholder = arguments.Tensor(mask.size()).fill_(0)
-            self.mask_sum = arguments.Tensor(batch_size).fill_(0)
-            self.mask_multiplier = self.mask_sum.clone().fill_(0).view(-1, 1)
+        mask_placeholder = arguments.Tensor(mask.size()).fill_(0)
+        mask_sum = arguments.Tensor(batch_size).fill_(0)
+        mask_multiplier = mask_sum.clone().fill_(0).view(-1, 1)
         
         # 3.0 compute mask sum for each batch
-        self.mask_placeholder.copy_(mask)
-        self.mask_sum = self.mask_placeholder.sum(dim=1, keepdim=True)
+        mask_placeholder.copy_(mask)
+        mask_sum = mask_placeholder.sum(dim=1, keepdim=True)
         
         # 3.1 mask multiplier - note that mask is 1 for impossible features
-        self.mask_multiplier.fill_(feature_size)
-        self.mask_multiplier.sub_(self.mask_sum)
-        self.mask_multiplier.div_(feature_size)
+        mask_multiplier.fill_(feature_size)
+        mask_multiplier.sub_(mask_sum)
+        mask_multiplier.div_(feature_size)
         
         # 4.0 multiply to get a new losss
         # loss is not really computed batch-wise correctly,
         # but that does not really matter now since gradients are correct
-        loss_multiplier = (batch_size * feature_size) / (batch_size * feature_size - self.mask_sum.sum() )
+        loss_multiplier = (batch_size * feature_size) / (batch_size * feature_size - mask_sum.sum() )
         new_loss = loss_multiplier * loss
+
+        ctx.save_for_backward(outputs, targets, mask_multiplier)
         
         return new_loss
 
-    def backward(self, outputs, targets, mask=None):
+    @staticmethod
+    def backward(ctx, grad_out):
         ''' Computes the gradient of the loss function @{forward} with
         arguments `outputs`, `targets`, and `mask`.
 
@@ -76,9 +86,10 @@ class MaskedHuberLoss(nn.Module):
         @param mask an NxM tensor containing N mask vectors generated with
         @{bucket_conversion.get_possible_bucket_mask}
         @return the gradient of @{forward} applied to the arguments'''
-        dloss_doutput = self.criterion.backward(outputs, targets)
+        outputs, targets, mask_multiplier = ctx.saved_tensors
+        dloss_doutput = smoothL1LossGrad(outputs, targets)
         
         # we use the multiplier computed with the mask during forward call
-        dloss_doutput.div_(self.mask_multiplier.expand_as(dloss_doutput))
+        dloss_doutput.div_(mask_multiplier.expand_as(dloss_doutput))
         
-        return dloss_doutput
+        return dloss_doutput, None, None

@@ -220,8 +220,6 @@ class LookaheadBuilder:
             # TODO recheck
             next_parent_id = action_id - prev_layer_terminal_actions_count
             next_gp_id = (gp_id) * gp_nonallinbets_count + (parent_id)
-            # print(f'\n {action_id+1} {prev_layer_terminal_actions_count}')
-            # print(f'{gp_id+1} {gp_nonallinbets_count} {parent_id+1}')
 
             if (not node.terminal) and (node.current_player != constants.players.chance):
             
@@ -232,7 +230,6 @@ class LookaheadBuilder:
                 node_with_empty_actions = (len(node.children) < self.lookahead.actions_count[layer])
                 
                 if node_with_empty_actions:
-                    # print('test')
                     # we need to mask nonexisting padded bets
                     assert(layer > 0)
 

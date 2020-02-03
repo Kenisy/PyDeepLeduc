@@ -32,9 +32,9 @@ class M:
         @param valid_loss the validation loss of the current network
         @local'''
         print(model)
-        criterion = MaskedHuberLoss()
+        criterion = MaskedHuberLoss.apply
         optimizer = optim.Adam(model.parameters(), lr=arguments.learning_rate)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.8, patience=5)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.8, patience=10)
 
         # optimization loop
         for epoch in range(epoch_count):
@@ -61,7 +61,7 @@ class M:
                 inputs, targets, mask = data_stream.get_valid_batch(i)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets, mask)
-                scheduler.step(loss)
+                # scheduler.step(loss)
                 valid_loss_sum += loss
 
             valid_loss = valid_loss_sum / data_stream.valid_batch_count

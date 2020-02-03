@@ -15,7 +15,7 @@ class Net(nn.Module):
         self.fc = nn.ModuleList([nn.Linear(self.input_size, arguments.net[0])])
         for i in range(1, len(arguments.net)):
             self.fc.append(nn.Linear(arguments.net[i-1], arguments.net[i]))
-        self.bn = nn.ModuleList([nn.BatchNorm1d(layer) for layer in arguments.net])
+        # self.bn = nn.ModuleList([nn.BatchNorm1d(layer) for layer in arguments.net])
         self.fc1 = nn.Linear(arguments.net[-1], self.output_size)
     
     def forward(self, x):
@@ -24,7 +24,7 @@ class Net(nn.Module):
 
         for i in range(len(self.fc)):
             feedforward = self.fc[i](feedforward)
-            feedforward = self.bn[i](feedforward)
+            # feedforward = self.bn[i](feedforward)
             feedforward = nn.ReLU()(feedforward)
 
         feedforward = self.fc1(feedforward)
