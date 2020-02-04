@@ -38,6 +38,7 @@ class M:
 
         # optimization loop
         for epoch in range(epoch_count):
+            data_stream.start_epoch()
             model.train()
             lossSum = 0
             for i in range(data_stream.get_train_batch_count()):

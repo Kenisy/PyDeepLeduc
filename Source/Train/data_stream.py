@@ -54,16 +54,16 @@ class DataStream:
         @return the number of batches'''
         return self.train_batch_count
 
-    def start_epoch():
+    def start_epoch(self):
         ''' Randomizes the order of training data.
 
         Done so that the data is encountered in a different order for each epoch.'''
         # data are shuffled each epoch 
-        shuffle = torch.randperm(self.train_data_count).long()
+        shuffle = torch.randperm(self.train_data_count)
 
-        self.data.train_inputs = self.data.train_inputs.index(1, shuffle)
-        self.data.train_targets = self.data.train_targets.index(1, shuffle)
-        self.data.train_mask = self.data.train_mask.index(1, shuffle)
+        self.data.train_inputs.index_copy_(0, shuffle, self.data.train_inputs.clone())
+        self.data.train_targets.index_copy_(0, shuffle, self.data.train_targets.clone())
+        self.data.train_mask.index_copy_(0, shuffle, self.data.train_mask.clone())
 
     def get_batch(self, inputs, targets, mask, batch_index):
         ''' Returns a batch of data from a specified data set.

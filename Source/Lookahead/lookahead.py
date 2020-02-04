@@ -300,7 +300,7 @@ class Lookahead:
         current iteration.
         @param iter the current iteration number of re-solving
         @local'''
-        if _iter > arguments.cfr_skip_iters:
+        if _iter >= arguments.cfr_skip_iters:
             self.average_cfvs_data[0].add_(self.cfvs_data[0])
             
             self.average_cfvs_data[1].add_(self.cfvs_data[1])

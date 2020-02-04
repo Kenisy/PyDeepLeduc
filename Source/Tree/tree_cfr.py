@@ -151,7 +151,7 @@ class TreeCFR:
         @param node the node to update
         @param current_strategy the CFR strategy for the current iteration
         @param iter the iteration number of the current CFR iteration'''
-        if _iter > arguments.cfr_skip_iters:
+        if _iter >= arguments.cfr_skip_iters:
             if node.strategy == None:
                 node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0)
             if node.iter_weight_sum == None:

@@ -31,7 +31,7 @@ class params:
     # the name of the neural net file
     value_net_name = 'final'
     # the neural net architecture
-    net = [50, 50, 50, 50]
+    net = [50, 50, 50, 50, 50]
     # how often to save the model during training
     save_epoch = 2
     # how many epochs to train for
