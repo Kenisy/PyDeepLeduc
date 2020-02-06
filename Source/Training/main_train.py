@@ -4,8 +4,8 @@ Uses data previously generated with @{data_generation_call}.
 @script main_train'''
 import sys
 sys.path.append(sys.path[0] + '/../../')
-from Source.Train.data_stream import DataStream
-from Source.Train.train import train
+from Source.Training.data_stream import DataStream
+from Source.Training.train import train
 from Source.Nn.net_builder import Net
 from Source.Settings.arguments import arguments
 

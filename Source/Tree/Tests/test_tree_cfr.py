@@ -7,6 +7,7 @@ from Source.Tree.tree_builder import *
 from Source.Game.card_to_string_conversion import card_to_string
 from Source.Tree.tree_cfr import TreeCFR
 from Source.Tree.tree_values import TreeValues
+from Source.Tree.tree_visualiser import TreeVisualiser
 
 if __name__ == "__main__":
     builder = PokerTreeBuilder()
@@ -31,3 +32,6 @@ if __name__ == "__main__":
     tree_values.compute_values(tree, starting_ranges)
 
     print('Exploitability: ' + str(tree.exploitability.item()) + '[chips]' )
+
+    visualiser = TreeVisualiser()
+    visualiser.graphviz(tree, "tree_cfr")

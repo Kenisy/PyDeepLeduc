@@ -10,6 +10,7 @@ from Source.Nn.bucketer import Bucketer
 from Source.Nn.bucket_conversion import BucketConversion
 from Source.Lookahead.resolving import Resolving
 from tqdm import tqdm
+import os.path
 import torch
 import time
 
@@ -112,6 +113,13 @@ class M:
             bucket_mask = bucket_conversion.get_possible_bucket_mask()
             mask[batch * batch_size : (batch + 1) * batch_size, :].copy_(bucket_mask.expand(batch_size, bucket_count))
         
+        if os.path.exists(file_name + '.inputs'):
+            saved_inputs = torch.load(file_name + '.inputs')
+            saved_targets = torch.load(file_name + '.targets')
+            saved_mask = torch.load(file_name + '.mask')
+            inputs = torch.cat((saved_inputs, inputs), 0)
+            targets = torch.cat((saved_targets, targets), 0)
+            mask = torch.cat((saved_mask, mask), 0)
         torch.save(inputs, file_name + '.inputs')
         torch.save(targets, file_name + '.targets')
         torch.save(mask, file_name + '.mask')

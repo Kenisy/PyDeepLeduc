@@ -35,13 +35,13 @@ class params:
     # how often to save the model during training
     save_epoch = 2
     # how many epochs to train for
-    epoch_count = 10
+    epoch_count = 100
     # how many solved poker situations are generated for use as training examples
     train_data_count = 100
     # how many solved poker situations are generated for use as validation examples
     valid_data_count = 100
     # learning rate for neural net training
-    learning_rate = 1e-3
+    learning_rate = 1e-2
 
 arguments = params()
 assert(arguments.cfr_iters > arguments.cfr_skip_iters)

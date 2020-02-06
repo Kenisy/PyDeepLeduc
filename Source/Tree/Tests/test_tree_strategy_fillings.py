@@ -7,6 +7,7 @@ from Source.Tree.tree_builder import *
 from Source.Game.card_to_string_conversion import card_to_string
 from Source.Tree.tree_values import TreeValues
 from Source.Tree.tree_strategy_filling import TreeStrategyFilling
+from Source.Tree.tree_visualiser import TreeVisualiser
 
 if __name__ == "__main__":
     builder = PokerTreeBuilder()

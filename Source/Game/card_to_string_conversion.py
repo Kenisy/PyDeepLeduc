@@ -66,7 +66,7 @@ class M:
         @param card_string the string representation of a card
         @return the numeric representation of the card'''
         card = self.string_to_card_table[card_string]
-        assert card > 0 and card <= game_settings.card_count
+        assert card >= 0 and card < game_settings.card_count
         return card
 
     def string_to_board(self, card_string):

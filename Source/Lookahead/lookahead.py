@@ -156,12 +156,12 @@ class Lookahead:
 
             # call term eq evaluation
             if self.tree.street == 1:
-                if d > 1 or self.first_call_terminal != None:
+                if d > 1 or self.first_call_terminal:
                     self.terminal_equity.call_value(self.ranges_data[d][1][-1].view(-1, game_settings.card_count), self.cfvs_data[d][1][-1].view(-1, game_settings.card_count)) 
             else:
                 assert(self.tree.street == 2)
                 # on river, any call is terminal 
-                if d > 1 or self.first_call_terminal != None:        
+                if d > 1 or self.first_call_terminal:        
                     self.terminal_equity.call_value(self.ranges_data[d][1].view(-1, game_settings.card_count), self.cfvs_data[d][1].view(-1, game_settings.card_count))
 
             # folds
@@ -180,7 +180,7 @@ class Lookahead:
 
         for d in range(1, self.depth):
             
-            if d > 1 or self.first_call_transition != None:
+            if d > 1 or self.first_call_transition:
                 if self.next_street_boxes_inputs == None:
                     self.next_street_boxes_inputs = {}
                 if self.next_street_boxes_outputs == None:
@@ -204,7 +204,7 @@ class Lookahead:
                 self.next_street_boxes[d].get_value(self.next_street_boxes_inputs[d], self.next_street_boxes_outputs[d])      
                 
                 # now the neural net outputs for P1 and P2 respectively, so we need to swap the output values if necessary
-                if self.tree.current_player == 1:
+                if self.tree.current_player == 0:
                     self.next_street_boxes_inputs[d].copy_(self.next_street_boxes_outputs[d])
                     
                     self.next_street_boxes_outputs[d][:, 0, :].copy_(self.next_street_boxes_inputs[d][:, 1, :])
