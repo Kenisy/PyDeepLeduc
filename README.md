@@ -36,9 +36,9 @@ To run PyDeepLeduc scripts you need to replace `th` with `python` and `.lua` wit
 
 ## Differences from DeepStack
 
-- Batch normlization layers were added to make training faster
-- Training neural network will automatically save the lowest validation loss epoch
-- Starting learning rate will be 1e-2 and decrease to 1e-3 if validation loss doesn't decrease after 10 epochs
+- Batch normlization layers were added to make converging faster.
+- Training neural network will automatically save the lowest validation loss epoch.
+- Starting learning rate will be 1e-2 and decrease to 1e-3 if validation loss doesn't decrease after 10 epochs.
 
 ## References
 

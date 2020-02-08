@@ -18,10 +18,8 @@ if __name__ == "__main__":
     current_node.current_player = constants.players.P1
     current_node.bets = arguments.Tensor([100, 100])
 
-    # player_range = card_tools.get_random_range(current_node.board, 2)
-    # opponent_range = card_tools.get_random_range(current_node.board, 4)
-    player_range = arguments.Tensor([0.1429, 0.0607, 0.0000, 0.3054, 0.1803, 0.3107])
-    opponent_range = arguments.Tensor([0.2500, 0.2328, 0.0000, 0.0446, 0.2514, 0.2212])
+    player_range = card_tools.get_random_range(current_node.board, 2)
+    opponent_range = card_tools.get_random_range(current_node.board, 4)
 
     resolving.resolve_first_node(current_node, player_range, opponent_range)
 
