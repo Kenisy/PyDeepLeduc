@@ -19,8 +19,8 @@ class Bucketer:
         @return a vector which maps each private hand to a bucket index'''
         shift = card_tools.get_board_index(board) * game_settings.card_count
         # TODO recheck
-        buckets = torch.arange(0, game_settings.card_count).float().add(shift)
+        buckets = torch.arange(0, game_settings.card_count).long().add(shift)
         # impossible hands will have bucket number -1
         for i in range(board.size(0)):
-            buckets[board[i].item()] = -1
+            buckets[board[i]] = -1
         return buckets

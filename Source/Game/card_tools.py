@@ -22,7 +22,7 @@ class M:
         assert hand.min() >= 0 and hand.max() < game_settings.card_count, 'Illegal cards in hand'
         used_cards = torch.zeros(game_settings.card_count)
         for i in range(hand.size(0)): 
-            used_cards[hand[i].item()] = used_cards[hand[i].item()] + 1
+            used_cards[hand[i]] = used_cards[hand[i]] + 1
         return used_cards.max() < 2
 
     def get_possible_hand_indexes(self, board):
@@ -113,9 +113,9 @@ class M:
             board_idx = 0 
             for card_1 in range(game_settings.card_count): 
                 for card_2 in range(card_1 + 1, game_settings.card_count): 
-                    board_idx = board_idx + 1
                     out[board_idx, 0] = card_1
                     out[board_idx, 1] = card_2
+                    board_idx = board_idx + 1
             assert board_idx == boards_count, 'wrong boards count!'
             return out
         else:
@@ -127,7 +127,7 @@ class M:
         if game_settings.board_card_count == 1:
             return game_settings.card_count
         elif game_settings.board_card_count == 2: 
-            return (game_settings.card_count * (game_settings.card_count - 1)) / 2
+            return (game_settings.card_count * (game_settings.card_count - 1)) // 2
         else:
             assert False, 'unsupported board size'
 
@@ -137,13 +137,13 @@ class M:
         if game_settings.board_card_count == 1:
             self._board_index_table = torch.arange(game_settings.card_count)
         elif game_settings.board_card_count == 2:
-            self._board_index_table = arguments.Tensor(game_settings.card_count, game_settings.card_count).fill_(-1)
+            self._board_index_table = arguments.IntTensor(game_settings.card_count, game_settings.card_count).fill_(-1)
             board_idx = 0 
             for card_1 in range(game_settings.card_count): 
                 for card_2 in range(card_1 + 1, game_settings.card_count):
-                    board_idx = board_idx + 1
                     self._board_index_table[card_1][card_2] = board_idx
                     self._board_index_table[card_2][card_1] = board_idx
+                    board_idx = board_idx + 1
         else:
             assert False, 'unsupported board size'
 
@@ -153,7 +153,7 @@ class M:
         @return the numerical index for the board'''
         index = self._board_index_table
         for i in range(board.size(0)):
-            index = index[board[i].item()]
+            index = index[board[i]]
         assert index >= 0, index
         return index
 

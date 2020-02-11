@@ -183,12 +183,12 @@ class TreeStrategyFilling:
             player_action = player_actions[i]
             bet_indicator = torch.eq(node.actions, player_action)
             # there has to be exactly one equivalent bet
-            assert(bet_indicator.sum(dim=0).item() == 1)
+            assert(bet_indicator.sum(dim=0) == 1)
             used_bets.add_(bet_indicator.type_as(used_bets))
 
         # check if terminal actions are used and if all player bets are used
         assert(used_bets[0] == 1 and used_bets[1] == 1)
-        assert(used_bets.sum(dim=0).item() == player_actions.size(0))
+        assert(used_bets.sum(dim=0) == player_actions.size(0))
 
         # fill the strategy
         node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0)
@@ -222,11 +222,11 @@ class TreeStrategyFilling:
             child_node = node.children[action]
             if used_bets[action] != 0:
 
-                if not (abs(range_after_action[action].sum(dim=0).item() - 1) < 0.001):
+                if not (abs(range_after_action[action].sum(dim=0) - 1) < 0.001):
                     assert range_after_action[action].sum() == 0, range_after_action[action].sum()
                     self._fill_uniformly(child_node, player)
                 else:
-                    assert(abs(range_after_action[action].sum(dim=0).item() - 1) < 0.001)
+                    assert(abs(range_after_action[action].sum(dim=0) - 1) < 0.001)
 
                     params = Parameters()
                     params.node = child_node
@@ -266,7 +266,7 @@ class TreeStrategyFilling:
             child_range = _range.clone()
             mask = card_tools.get_possible_hand_indexes(child_node.board)
             child_range.mul_(mask)
-            range_weight = child_range.sum(dim=0).item() # weight should be single number
+            range_weight = child_range.sum(dim=0) # weight should be single number
             child_range.mul_(1/range_weight)
 
             # we should never touch same re-solving again after the chance action, set it to None

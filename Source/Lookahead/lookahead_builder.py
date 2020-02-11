@@ -47,7 +47,7 @@ class LookaheadBuilder:
         self.lookahead.regret_epsilon = 1.0 / 1000000000
 
         # which player acts at particular depth
-        self.lookahead.acting_player = torch.Tensor(self.lookahead.depth+1).fill_(-1)
+        self.lookahead.acting_player = arguments.IntTensor(self.lookahead.depth+1).fill_(-1)
         self.lookahead.acting_player[0] = 0 # in lookahead, 1 does not stand for player IDs, it's just the first player to act
         for d in range(1, self.lookahead.depth+1):
             self.lookahead.acting_player[d] = 1 - self.lookahead.acting_player[d-1]
@@ -202,7 +202,7 @@ class LookaheadBuilder:
         assert(node.pot)
         self.lookahead.pot_size[layer][action_id, parent_id, gp_id, :, :] = node.pot  
         
-        node.lookahead_coordinates = arguments.Tensor([action_id, parent_id, gp_id])
+        node.lookahead_coordinates = arguments.IntTensor([action_id, parent_id, gp_id])
 
         # transition call cannot be allin call
         if node.current_player == constants.players.chance:

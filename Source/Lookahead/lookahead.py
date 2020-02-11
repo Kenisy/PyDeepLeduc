@@ -137,7 +137,7 @@ class Lookahead:
             next_level_ranges.copy_(super_view)
 
             # multiply the ranges of the acting player by his strategy
-            next_level_ranges[:, :, :, int(self.acting_player[d].item()), :].mul_(next_level_strategies)
+            next_level_ranges[:, :, :, self.acting_player[d], :].mul_(next_level_strategies)
 
     def _compute_update_average_strategies(self, _iter):
         ''' Updates the players' average strategies with their current strategies.
@@ -285,7 +285,7 @@ class Lookahead:
             self.placeholder_data[d].copy_(self.cfvs_data[d])
 
             # player indexing is swapped for cfvs
-            self.placeholder_data[d][:, :, :, int(self.acting_player[d].item()), :].mul_(self.current_strategy_data[d])
+            self.placeholder_data[d][:, :, :, self.acting_player[d], :].mul_(self.current_strategy_data[d])
 
             # TODO recheck
             self.regrets_sum[d] = self.placeholder_data[d].sum(dim=0, keepdim=True)
@@ -342,12 +342,12 @@ class Lookahead:
             ggp_layer_nonallin_bets_count = self.nonallinbets_count[d-3]
 
             current_regrets = self.current_regrets_data[d]
-            current_regrets.copy_(self.cfvs_data[d][:, :, :, int(self.acting_player[d].item()), :])
+            current_regrets.copy_(self.cfvs_data[d][:, :, :, self.acting_player[d], :])
 
             next_level_cfvs = self.cfvs_data[d-1]
 
             parent_inner_nodes = self.inner_nodes_p1[d-1]
-            parent_inner_nodes.copy_(next_level_cfvs[gp_layer_terminal_actions_count :, : ggp_layer_nonallin_bets_count, :, int(self.acting_player[d].item()), :].transpose(1,2).view(parent_inner_nodes.shape))
+            parent_inner_nodes.copy_(next_level_cfvs[gp_layer_terminal_actions_count :, : ggp_layer_nonallin_bets_count, :, self.acting_player[d], :].transpose(1,2).view(parent_inner_nodes.shape))
             parent_inner_nodes = parent_inner_nodes.view(1, gp_layer_bets_count, -1, game_settings.card_count)
             parent_inner_nodes = parent_inner_nodes.expand_as(current_regrets)
 

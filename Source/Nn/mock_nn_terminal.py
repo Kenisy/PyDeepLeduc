@@ -29,8 +29,8 @@ class MockNnTerminal:
             buckets = self.bucketer.compute_buckets(board)
             for c1 in range(game_settings.card_count): 
                 for c2 in range(game_settings.card_count): 
-                    b1 = int(buckets[c1].item())
-                    b2 = int(buckets[c2].item())
+                    b1 = buckets[c1]
+                    b2 = buckets[c2]
                     if( b1 > 0 and b2 > 0 ):
                         matrix_entry = call_matrix[c1][c2]
                         self.equity_matrix[b1][b2] = matrix_entry

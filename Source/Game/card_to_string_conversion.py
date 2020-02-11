@@ -79,8 +79,8 @@ class M:
         # assert card_string
         
         if card_string == '':
-            return arguments.Tensor()
+            return arguments.IntTensor()
         
-        return arguments.Tensor([self.string_to_card(card_string)])
+        return arguments.IntTensor([self.string_to_card(card_string)])
 
 card_to_string = M()
