@@ -6,7 +6,7 @@ is not a possible hand).
 
 Hand strength is given as a numerical value, where a lower strength means
 a stronger hand: high pair < low pair < high card < low card
-@module evaluator '''
+'''
 
 from Source.Settings.game_settings import game_settings
 from Source.Game.card_tools import card_tools
@@ -17,9 +17,10 @@ import torch
 class M:
     def evaluate_two_card_hand(self, hand_ranks):
         ''' Gives a strength representation for a hand containing two cards.
-        @param hand_ranks the rank of each card in the hand
-        @return the strength value of the hand
-        @local'''
+
+        Params:
+            hand_ranks: the rank of each card in the hand
+        Return the strength value of the hand'''
         # check for the pair 
         hand_value = None
         if hand_ranks[0] == hand_ranks[1]:
@@ -32,9 +33,10 @@ class M:
 
     def evaluate_three_card_hand(self, hand_ranks):
         ''' Gives a strength representation for a hand containing three cards.
-        @param hand_ranks the rank of each card in the hand
-        @return the strength value of the hand
-        @local'''
+
+        Params:
+            hand_ranks: the rank of each card in the hand
+        Return the strength value of the hand'''
         hand_value = None
         # check for the pair 
         if hand_ranks[0] == hand_ranks[1]: 
@@ -50,9 +52,11 @@ class M:
 
     def evaluate(self, hand, impossible_hand_value=-1):
         ''' Gives a strength representation for a two or three card hand.
-        @param hand a vector of two or three cards
-        @param[opt] impossible_hand_value the value to return if the hand is invalid
-        @return the strength value of the hand, or `impossible_hand_value` if the 
+
+        Params:
+            hand: a vector of two or three cards
+            impossible_hand_value [opt]: the value to return if the hand is invalid
+        Return the strength value of the hand, or `impossible_hand_value` if the 
         hand is invalid'''
         assert hand.max() < game_settings.card_count and hand.min() >= 0, 'hand does not correspond to any cards'
         impossible_hand_value = impossible_hand_value
@@ -72,10 +76,11 @@ class M:
 
     def batch_eval(self, board, impossible_hand_value=-1):
         ''' Gives strength representations for all private hands on the given board.
-        @param board a possibly empty vector of board cards
-        @param impossible_hand_value the value to assign to hands which are invalid 
-        on the board
-        @return a vector containing a strength value or `impossible_hand_value` for
+
+        Params:
+            board: a possibly empty vector of board cards
+            impossible_hand_value: the value to assign to hands which are invalid on the board
+        Return a vector containing a strength value or `impossible_hand_value` for
         every private hand'''
         hand_values = arguments.Tensor(game_settings.card_count).fill_(-1)
         if board.dim() == 0:

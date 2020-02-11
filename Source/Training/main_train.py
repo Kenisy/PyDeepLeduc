@@ -1,7 +1,7 @@
 ''' Script that trains the neural network.
 
 Uses data previously generated with @{data_generation_call}.
-@script main_train'''
+'''
 import sys
 sys.path.append(sys.path[0] + '/../../')
 from Source.Training.data_stream import DataStream

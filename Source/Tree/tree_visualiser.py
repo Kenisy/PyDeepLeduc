@@ -1,5 +1,4 @@
-''' Generates visual representations of game trees.
-@classmod tree_visualiser'''
+''' Generates visual representations of game trees.'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Game.card_to_string_conversion import card_to_string
@@ -31,13 +30,15 @@ class TreeVisualiser:
 
     def add_tensor(self, tensor, name=None, _format=None, labels=None):
         ''' Generates a string representation of a tensor.
-        @param tensor a tensor
-        @param[opt] name a name for the tensor
-        @param[opt] format a format string to use with @{string.format} for each
+
+        Params:
+            tensor: a tensor
+            name [opt]: a name for the tensor
+            format [opt]: a format string to use with @{string.format} for each
         element of the tensor
-        @param[opt] labels a list of labels for the elements of the tensor
-        @return a string representation of the tensor
-        @local'''
+            labels [opt]: a list of labels for the elements of the tensor
+        Return a string representation of the tensor
+        '''
         out = ''
         if name:
             out = '| ' + name + ': '
@@ -55,11 +56,13 @@ class TreeVisualiser:
     def add_range_info(self, node):
         ''' Generates a string representation of any range or value fields that are set
         for the given tree node.
-        @param node the node
-        @return a string containing concatenated representations of any tensors
+
+        Params:
+            node: the node
+        Return a string containing concatenated representations of any tensors
         stored in the `ranges_absolute`, `cf_values`, or `cf_values_br` fields of
         the node.
-        @local'''   
+        '''   
         out = ""
         
         if(node.ranges_absolute != None):
@@ -80,9 +83,11 @@ class TreeVisualiser:
 
     def node_to_graphviz(self, node):  
         ''' Generates data for a graphical representation of a node in a public tree.
-        @param node the node to generate data for
-        @return a table containing `name`, `label`, and `shape` fields for graphviz
-        @local''' 
+
+        Params:
+            node: the node to generate data for
+        Return a table containing `name`, `label`, and `shape` fields for graphviz
+        ''' 
         out = Graph()
         
         # 1.0 label
@@ -136,13 +141,15 @@ class TreeVisualiser:
     def nodes_to_graphviz_edge(self, _from, to, node, child_node):
         ''' Generates data for graphical representation of a public tree action as an
         edge in a tree.
-        @param from the graphical node the edge comes from
-        @param to the graphical node the edge goes to
-        @param node the public tree node before at which the action is taken
-        @param child_node the public tree node that results from taking the action
-        @return a table containing fields `id_from`, `id_to`, `id` for graphviz and
+
+        Params:
+            from: the graphical node the edge comes from
+            to: the graphical node the edge goes to
+            node: the public tree node before at which the action is taken
+            child_node: the public tree node that results from taking the action
+        Return a table containing fields `id_from`, `id_to`, `id` for graphviz and
         a `strategy` field to use as a label for the edge
-        @local'''
+        '''
         out = Node()
         
         out.id_from = _from.name
@@ -163,10 +170,12 @@ class TreeVisualiser:
 
     def graphviz_dfs(self, node, nodes, edges):
         ''' Recursively generates graphviz data from a public tree.
-        @param node the current node in the public tree
-        @param nodes a table of graphical nodes generated so far
-        @param edges a table of graphical edges generated so far
-        @local'''
+
+        Params:
+            node: the current node in the public tree
+            nodes: a table of graphical nodes generated so far
+            edges: a table of graphical edges generated so far
+        '''
         gv_node = self.node_to_graphviz(node)
         nodes.append(gv_node)
         
@@ -190,9 +199,10 @@ class TreeVisualiser:
 
         Each edge in the image lists the probability of the action being taken
         with each private card.
-        # 
-        @param root the root of the game's public tree
-        @param filename a name used for the output files'''
+
+        Params:
+            root: the root of the game's public tree
+            filename: a name used for the output files'''
         out = 'digraph g {  graph [ rankdir = "LR"];node [fontsize = "16" shape = "ellipse"]; edge [];'
             
         nodes = []

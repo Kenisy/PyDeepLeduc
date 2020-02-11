@@ -1,5 +1,4 @@
-''' Converts between string and numeric representations of cards.
-@module card_to_string_conversion '''
+''' Converts between string and numeric representations of cards.'''
 
 from Source.Settings.game_settings import game_settings
 from Source.Settings.arguments import arguments
@@ -31,28 +30,36 @@ class M:
 
     def card_to_suit(self, card):
         ''' Gets the suit of a card.
-        @param card the numeric representation of the card
-        @return the index of the suit'''
+
+        Params:
+            card: the numeric representation of the card
+        Return the index of the suit'''
         return card % game_settings.suit_count
 
     def card_to_rank(self, card):
         ''' Gets the rank of a card.
-        @param card the numeric representation of the card
-        @return the index of the rank'''
+
+        Params:
+            card: the numeric representation of the card
+        Return the index of the rank'''
         return card // game_settings.suit_count
  
     def card_to_string(self, card):
         ''' Converts a card's numeric representation to its string representation.
-        @param card the numeric representation of a card
-        @return the string representation of the card'''
+
+        Params:
+            card: the numeric representation of a card
+        Return the string representation of the card'''
         assert card >= 0 and card < game_settings.card_count
         return self.card_to_string_table[int(card)]
 
     def cards_to_string(self, cards):
         ''' Converts several cards' numeric representations to their string 
         representations.
-        @param cards a vector of numeric representations of cards
-        @return a string containing each card's string representation, concatenated'''
+
+        Params:
+            cards: a vector of numeric representations of cards
+        Return a string containing each card's string representation, concatenated'''
         if cards.dim() == 0:
             return ""
         
@@ -63,8 +70,10 @@ class M:
 
     def string_to_card(self, card_string):
         ''' Converts a card's string representation to its numeric representation.
-        @param card_string the string representation of a card
-        @return the numeric representation of the card'''
+
+        Params:
+            card_string: the string representation of a card
+        Return the numeric representation of the card'''
         card = self.string_to_card_table[card_string]
         assert card >= 0 and card < game_settings.card_count
         return card
@@ -72,9 +81,10 @@ class M:
     def string_to_board(self, card_string):
         ''' Converts a string representing zero or one board cards to a 
         vector of numeric representations.
-        @param card_string either the empty string or a string representation of a 
-        card
-        @return either an empty tensor or a tensor containing the numeric 
+
+        Params:
+            card_string: either the empty string or a string representation of a card
+        Return either an empty tensor or a tensor containing the numeric 
         representation of the card'''
         # assert card_string
         

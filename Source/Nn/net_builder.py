@@ -1,3 +1,5 @@
+''' Builds a neural net with architecture specified by @{arguments.net}.'''
+
 import torch.nn as nn
 import torch
 from Source.Settings.arguments import arguments

@@ -1,6 +1,6 @@
 ''' Computes the expected value of a strategy profile on a game's public tree,
 as well as the value of a best response against the profile.
-@classmod tree_values'''
+'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -16,13 +16,15 @@ class TreeValues:
     def _fill_ranges_dfs(self, node, ranges_absolute):
         ''' Recursively walk the tree and calculate the probability of reaching each
         node using the saved strategy profile.
-        # 
+        
         The reach probabilities are saved in the `ranges_absolute` field of each
         node.
-        @param node the current node of the tree
-        @param ranges_absolute a 2xK tensor containing the probabilities of each 
-        player reaching the current node with each private hand
-        @local'''
+
+        Params:
+            node: the current node of the tree
+            ranges_absolute: a 2xK tensor containing the probabilities of each 
+                player reaching the current node with each private hand
+        '''
         node.ranges_absolute = ranges_absolute.clone()
 
         if(node.terminal):
@@ -82,13 +84,15 @@ class TreeValues:
     def _compute_values_dfs(self, node):
         ''' Recursively calculate the counterfactual values for each player at each
         node of the tree using the saved strategy profile.
-        # 
+        
         The cfvs for each player in the given strategy profile when playing against
         each other is stored in the `cf_values` field for each node. The cfvs for
         a best response against each player in the profile are stored in the 
         `cf_values_br` field for each node.
-        @param node the current node
-        @local'''
+
+        Params:
+            node: the current node
+        '''
         # compute values using terminal_equity in terminal nodes
         if(node.terminal):
         
@@ -162,11 +166,12 @@ class TreeValues:
         each other is stored in the `cf_values` field for each node. The cfvs for
         a best response against each player in the profile are stored in the 
         `cf_values_br` field for each node.
-        # 
-        @param root The root of the game tree. Each node of the tree is assumed to
-        have a strategy saved in the `strategy` field.
-        @param[opt] starting_ranges probability vectors over player private hands
-        at the root node (default uniform)'''
+
+        Params:
+            root: The root of the game tree. Each node of the tree is assumed to
+                have a strategy saved in the `strategy` field.
+            starting_ranges [opt]: probability vectors over player private hands
+                at the root node (default uniform)'''
         # 1.0 set the starting range
         uniform_ranges = arguments.Tensor(constants.players_count, game_settings.card_count).fill_(1.0/game_settings.card_count)  
         if starting_ranges == None:

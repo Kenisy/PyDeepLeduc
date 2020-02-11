@@ -1,5 +1,4 @@
-''' Generates neural net training data by solving random poker situations.
-@module data_generation'''
+''' Generates neural net training data by solving random poker situations.'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -22,9 +21,10 @@ class M:
 
         Makes two calls to @{generate_data_file}. The files are saved to 
         @{arguments.data_path}, respectively appended with `valid` and `train`.
-        # 
-        @param train_data_count the number of training examples to generate
-        @param valid_data_count the number of validation examples to generate'''
+        
+        Params:
+            train_data_count: the number of training examples to generate
+            valid_data_count: the number of validation examples to generate'''
         # valid data generation 
         file_name = arguments.data_path + 'valid'
         timer = time.time()
@@ -47,9 +47,10 @@ class M:
         @{random_card_generator}. For description of neural net input and target
         type, see @{net_builder}.
 
-        @param data_count the number of examples to generate
-        @param file_name the prefix of the files where the data is saved (appended
-        with `.inputs`, `.targets`, and `.mask`).'''
+        Params:
+            data_count: the number of examples to generate
+            file_name: the prefix of the files where the data is saved (appended 
+                with `.inputs`, `.targets`, and `.mask`).'''
         range_generator = RangeGenerator()
         batch_size = arguments.gen_batch_size
         assert data_count % batch_size == 0, 'data count has to be divisible by the batch size'

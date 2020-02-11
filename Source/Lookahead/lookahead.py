@@ -1,5 +1,4 @@
-''' A depth-limited lookahead of the game tree used for re-solving.
-@classmod lookahead'''
+''' A depth-limited lookahead of the game tree used for re-solving.'''
 
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
@@ -28,9 +27,11 @@ class Lookahead:
 
     def build_lookahead(self, tree):
         ''' Constructs the lookahead from a game's public tree.
-        # 
+        
         Must be called to initialize the lookahead.
-        @param tree a public tree'''
+
+        Params:
+            tree: a public tree'''
         self.builder.build_from_tree(tree)
 
         self.terminal_equity = TerminalEquity()
@@ -38,15 +39,16 @@ class Lookahead:
 
     def resolve_first_node(self, player_range, opponent_range):
         ''' Re-solves the lookahead using input ranges.
-        # 
+        
         Uses the input range for the opponent instead of a gadget range, so only
         appropriate for re-solving the root node of the game tree (where ranges 
         are fixed).
-        # 
+        
         @{build_lookahead} must be called first.
-        # 
-        @param player_range a range vector for the re-solving player
-        @param opponent_range a range vector for the opponent'''
+
+        Params:
+            player_range: a range vector for the re-solving player
+            opponent_range: a range vector for the opponent'''
         self.ranges_data[0][:, :, :, 0, :].copy_(player_range)  
         self.ranges_data[0][:, :, :, 1, :].copy_(opponent_range)  
         self._compute()
@@ -57,9 +59,9 @@ class Lookahead:
 
         @{build_lookahead} must be called first.
 
-        @param player_range a range vector for the re-solving player
-        @param opponent_cfvs a vector of cfvs achieved by the opponent
-        before re-solving'''
+        Params:
+            player_range: a range vector for the re-solving player
+            opponent_cfvs: a vector of cfvs achieved by the opponent before re-solving'''
         assert(player_range != None)
         assert(opponent_cfvs != None)
         
@@ -71,7 +73,7 @@ class Lookahead:
 
     def _compute(self):
         ''' Re-solves the lookahead.
-        @local'''
+        '''
         # 1.0 main loop
         for i in range(arguments.cfr_iters):
             self._set_opponent_starting_range(i)
@@ -90,10 +92,9 @@ class Lookahead:
 
     def _compute_current_strategies(self):
         ''' Uses regret matching to generate the players' current strategies.
-        @local'''
+        '''
         for d in range(1, self.depth):
             self.positive_regrets_data[d].copy_(self.regrets_data[d])
-            # TODO rework
             self.positive_regrets_data[d].clamp_(self.regret_epsilon, constants.max_number)
 
             # 1.0 set regret of empty actions to 0
@@ -101,7 +102,6 @@ class Lookahead:
 
             # 1.1  regret matching
             # note that the regrets as well as the CFVs have switched player indexing
-            # TODO recheck
             self.regrets_sum[d] = self.positive_regrets_data[d].sum(dim=0)
             player_current_strategy = self.current_strategy_data[d]
             player_regrets = self.positive_regrets_data[d]
@@ -112,7 +112,7 @@ class Lookahead:
     def _compute_ranges(self):
         ''' Using the players' current strategies, computes their probabilities of
         reaching each state of the lookahead.
-        @local'''
+        '''
         for d in range(self.depth-1):
             current_level_ranges = self.ranges_data[d]
             next_level_ranges = self.ranges_data[d+1]
@@ -125,7 +125,6 @@ class Lookahead:
 
 
             # copy the ranges of inner nodes and transpose
-            # TODO recheck
             self.inner_nodes[d].copy_(current_level_ranges[prev_layer_terminal_actions_count :, : gp_layer_nonallin_bets_count, :, :, :].transpose(1,2).view(self.inner_nodes[d].shape))
 
             super_view = self.inner_nodes[d]
@@ -141,8 +140,10 @@ class Lookahead:
 
     def _compute_update_average_strategies(self, _iter):
         ''' Updates the players' average strategies with their current strategies.
-        @param iter the current iteration number of re-solving
-        @local'''
+
+        Params:
+            iter: the current iteration number of re-solving
+        '''
         if _iter >= arguments.cfr_skip_iters:
             # no need to go through layers since we care for the average strategy only in the first node anyway
             # note that if you wanted to average strategy on lower layers, you would need to weight the current strategy by the current reach probability
@@ -151,7 +152,7 @@ class Lookahead:
     def _compute_terminal_equities_terminal_equity(self):
         ''' Using the players' reach probabilities, computes their counterfactual
         values at each lookahead state which is a terminal state of the game.
-        @local'''
+        '''
         for d in range(1, self.depth):
 
             # call term eq evaluation
@@ -175,7 +176,7 @@ class Lookahead:
     def _compute_terminal_equities_next_street_box(self):
         ''' Using the players' reach probabilities, calls the neural net to compute the
         players' counterfactual values at the depth-limited states of the lookahead.
-        @local'''
+        '''
         assert(self.tree.street == 1)
 
         for d in range(1, self.depth):
@@ -192,7 +193,6 @@ class Lookahead:
                     self.next_street_boxes_outputs[d] = self.next_street_boxes_inputs[d].clone()
                 
                 # now the neural net accepts the input for P1 and P2 respectively, so we need to swap the ranges if necessary
-                # TODO recheck
                 self.next_street_boxes_outputs[d].copy_(self.ranges_data[d][1, :, :, :, :].view(self.next_street_boxes_outputs[d].shape))
                 
                 if self.tree.current_player == 0:
@@ -219,10 +219,10 @@ class Lookahead:
         Used during continual re-solving to track opponent cfvs. The lookahead must 
         first be re-solved with @{resolve} or @{resolve_first_node}.
 
-        @param action_index the action taken by the re-solving player at the start
-        of the lookahead
-        @param board a tensor of board cards, updated by the chance event
-        @return a vector of cfvs'''
+        Params:
+            action_index: the action taken by the re-solving player at the start of the lookahead
+            board: a tensor of board cards, updated by the chance event
+        Return a vector of cfvs'''
         box_outputs = None
         next_street_box = None
         batch_index = None
@@ -261,7 +261,7 @@ class Lookahead:
         values at all terminal states of the lookahead.
 
         These include terminal states of the game and depth-limited states.
-        @local'''
+        '''
         if self.tree.street == 1:
             self._compute_terminal_equities_next_street_box()
 
@@ -274,7 +274,7 @@ class Lookahead:
     def _compute_cfvs(self):
         ''' Using the players' reach probabilities and terminal counterfactual
         values, computes their cfvs at all states of the lookahead.
-        @local'''
+        '''
         for d in range(self.depth-1, 0, -1):
             gp_layer_terminal_actions_count = self.terminal_actions_count[d-2]
             ggp_layer_nonallin_bets_count = self.nonallinbets_count[d-3]
@@ -287,7 +287,6 @@ class Lookahead:
             # player indexing is swapped for cfvs
             self.placeholder_data[d][:, :, :, self.acting_player[d], :].mul_(self.current_strategy_data[d])
 
-            # TODO recheck
             self.regrets_sum[d] = self.placeholder_data[d].sum(dim=0, keepdim=True)
 
             # use a swap placeholder to change {{1,2,3}, {4,5,6}} into {{1,2}, {3,4}, {5,6}}
@@ -298,8 +297,10 @@ class Lookahead:
     def _compute_cumulate_average_cfvs(self, _iter):
         ''' Updates the players' average counterfactual values with their cfvs from the
         current iteration.
-        @param iter the current iteration number of re-solving
-        @local'''
+
+        Params:
+            iter: the current iteration number of re-solving
+        '''
         if _iter >= arguments.cfr_skip_iters:
             self.average_cfvs_data[0].add_(self.cfvs_data[0])
             
@@ -310,12 +311,11 @@ class Lookahead:
 
         Used at the end of re-solving so that we can track un-normalized average
         strategies, which are simpler to compute.
-        @local'''
+        '''
         # using regrets_sum as a placeholder container
         player_avg_strategy = self.average_strategies_data[1]
         player_avg_strategy_sum = self.regrets_sum[1]
 
-        # TODO recheck
         player_avg_strategy_sum = player_avg_strategy.sum(dim=0)
         player_avg_strategy.div_(player_avg_strategy_sum.expand_as(player_avg_strategy))
         
@@ -329,13 +329,13 @@ class Lookahead:
 
         Used at the end of re-solving so that we can track un-normalized average
         cfvs, which are simpler to compute.
-        @local'''
+        '''
         self.average_cfvs_data[0].div_(arguments.cfr_iters - arguments.cfr_skip_iters)
 
     def _compute_regrets(self):
         ''' Using the players' counterfactual values, updates their total regrets
         for every state in the lookahead.
-        @local'''
+        '''
         for d in range(self.depth-1, 0, -1):
             gp_layer_terminal_actions_count = self.terminal_actions_count[d-2]
             gp_layer_bets_count = self.bets_count[d-2]
@@ -365,16 +365,13 @@ class Lookahead:
         The lookahead must first be re-solved with @{resolve} or 
         @{resolve_first_node}.
 
-        @return a table containing the fields.
-
-        * `strategy`. an AxK tensor containing the re-solve player's strategy at the
-        root of the lookahead, where A is the number of actions and K is the range size
-
-        * `achieved_cfvs`. a vector of the opponent's average counterfactual values at the 
-        root of the lookahead
-
-        * `children_cfvs`. an AxK tensor of opponent average counterfactual values after
-        each action that the re-solve player can take at the root of the lookahead'''
+        Return a table containing the fields:
+            * `strategy`: an AxK tensor containing the re-solve player's strategy at the
+                root of the lookahead, where A is the number of actions and K is the range size
+            * `achieved_cfvs`: a vector of the opponent's average counterfactual values at the 
+                root of the lookahead
+            * `children_cfvs`: an AxK tensor of opponent average counterfactual values after
+                each action that the re-solve player can take at the root of the lookahead'''
         out = ResolveResult()
         
         actions_count = self.average_strategies_data[1].size(0)
@@ -423,8 +420,10 @@ class Lookahead:
     def _set_opponent_starting_range(self, iteration):
         ''' Generates the opponent's range for the current re-solve iteration using
         the @{cfrd_gadget|CFRDGadget}.
-        @param iteration the current iteration number of re-solving
-        @local'''
+
+        Params:
+            iteration: the current iteration number of re-solving
+        '''
         if self.reconstruction_opponent_cfvs != None:
             # note that CFVs indexing is swapped, thus the CFVs for the reconstruction player are for player '1'
             opponent_range = self.reconstruction_gadget.compute_opponent_range(self.cfvs_data[0][:, :, :, 0, :], iteration)

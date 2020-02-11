@@ -1,6 +1,6 @@
 ''' Gives allowed bets during a game.
 Bets are restricted to be from a list of predefined fractions of the pot.
-@classmod bet_sizing'''
+'''
 
 from Source.Settings.arguments import arguments
 import torch
@@ -8,19 +8,21 @@ import torch
 class BetSizing:
     def __init__(self, pot_fractions):
         ''' Constructor
-        @param pot_fractions a list of fractions of the pot which are allowed 
-        as bets, sorted in ascending order '''
+
+        Params:
+            pot_fractions: a list of fractions of the pot which are allowed 
+                as bets, sorted in ascending order '''
         super().__init__()
         self.pot_fractions = pot_fractions
 
     def get_possible_bets(self, node):
         ''' Gives the bets which are legal at a game state.
-        @param node a representation of the current game state, with fields:
-        
-        * `bets`: the number of chips currently committed by each player
-        
-        * `current_player`: the currently acting player
-        @return an Nx2 tensor where N is the number of new possible game states,
+
+        Params:
+            node: a representation of the current game state, with fields:
+                * `bets`: the number of chips currently committed by each player
+                * `current_player`: the currently acting player
+        Return an Nx2 tensor where N is the number of new possible game states,
         containing N sets of new commitment levels for each player '''
         current_player = node.current_player
         assert current_player == 0 or current_player == 1, 'Wrong player for bet size computation'

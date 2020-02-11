@@ -2,13 +2,14 @@
 
 Computes the loss across buckets, but only on buckets that are
 possible on a given board.
-@classmod masked_huber_loss'''
+'''
 
 from Source.Settings.arguments import arguments
 import torch.nn as nn
 import torch
 
 def smoothL1LossForward(outputs, targets):
+    ''' Calculate SmoothL1Loss of 2 vectors '''
     n = torch.abs(outputs - targets)
     beta = 1
     cond = n < beta
@@ -16,6 +17,7 @@ def smoothL1LossForward(outputs, targets):
     return z.mean()
 
 def smoothL1LossGrad(outputs, targets):
+    ''' Calculate gradiant of SmoothL1Loss with respect to outputs'''
     d = outputs - targets
     n = torch.abs(d)
     dloss_dn = n.clone()
@@ -31,13 +33,14 @@ class MaskedHuberLoss(torch.autograd.Function):
     def forward(ctx, outputs, targets, mask):
         ''' Computes the loss over a batch of neural net outputs and targets.
 
-        @param outputs an NxM tensor containing N vectors of values over buckets,
-        output by the neural net
-        @param targets an NxM tensor containing N vectors of actual values over
-        buckets, produced by @{data_generation_call}
-        @param mask an NxM tensor containing N mask vectors generated with
-        @{bucket_conversion.get_possible_bucket_mask}
-        @return the sum of Huber loss applied elementwise on `outputs` and `targets`,
+        Params:
+            outputs: an NxM tensor containing N vectors of values over buckets,
+                output by the neural net
+            targets: an NxM tensor containing N vectors of actual values over
+                buckets, produced by @{data_generation_call}
+            mask: an NxM tensor containing N mask vectors generated with
+                @{bucket_conversion.get_possible_bucket_mask}
+        Return the sum of Huber loss applied elementwise on `outputs` and `targets`,
         masked so that only valid buckets are included'''
         batch_size = outputs.size(0)
         feature_size = outputs.size(1)
@@ -79,13 +82,14 @@ class MaskedHuberLoss(torch.autograd.Function):
 
         Must be called after a @{forward} call with the same arguments.
 
-        @param outputs an NxM tensor containing N vectors of values over buckets,
-        output by the neural net
-        @param targets an NxM tensor containing N vectors of actual values over
-        buckets, produced by @{data_generation_call}
-        @param mask an NxM tensor containing N mask vectors generated with
-        @{bucket_conversion.get_possible_bucket_mask}
-        @return the gradient of @{forward} applied to the arguments'''
+        Params:
+            outputs: an NxM tensor containing N vectors of values over buckets,
+                output by the neural net
+            targets: an NxM tensor containing N vectors of actual values over
+                buckets, produced by @{data_generation_call}
+            mask: an NxM tensor containing N mask vectors generated with
+                @{bucket_conversion.get_possible_bucket_mask}
+        Return the gradient of @{forward} applied to the arguments'''
         outputs, targets, mask_multiplier = ctx.saved_tensors
         dloss_doutput = smoothL1LossGrad(outputs, targets)
         

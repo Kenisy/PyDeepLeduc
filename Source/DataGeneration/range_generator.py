@@ -1,5 +1,4 @@
-''' Samples random probability vectors for use as player ranges.
-@classmod range_generator'''
+''' Samples random probability vectors for use as player ranges.'''
 
 from Source.Settings.arguments import arguments
 from Source.Game.Evaluation.evaluator import evaluator
@@ -11,11 +10,11 @@ class RangeGenerator:
 
     def _generate_recursion(self, cards, mass):
         ''' Recursively samples a section of the range vector.
-        @param cards an NxJ section of the range tensor, where N is the batch size
-        and J is the length of the range sub-vector
-        @param mass a vector of remaining probability mass for each batch member
-        @see generate_range
-        @local'''
+
+        Params:
+            cards: an NxJ section of the range tensor, where N is the batch size 
+                and J is the length of the range sub-vector
+            mass: a vector of remaining probability mass for each batch member '''
         batch_size = cards.size(0)
         assert(mass.size(0) == batch_size)
         # we terminate recursion at size of 1
@@ -36,10 +35,10 @@ class RangeGenerator:
 
     def _generate_sorted_range(self, _range):
         ''' Samples a batch of ranges with hands sorted by strength on the board.
-        @param range a NxK tensor in which to store the sampled ranges, where N is
-        the number of ranges to sample and K is the range size
-        @see generate_range
-        @local'''
+
+        Params:
+            range: a NxK tensor in which to store the sampled ranges, where N is 
+                the number of ranges to sample and K is the range size'''
         batch_size = _range.size(0)
         self._generate_recursion(_range, arguments.Tensor(batch_size).fill_(1))
 
@@ -48,8 +47,9 @@ class RangeGenerator:
 
         The sampled ranges will assign 0 probability to any private hands that
         share any cards with the board.
-        # 
-        @param board a possibly empty vector of board cards'''
+        
+        Params:
+            board: a possibly empty vector of board cards'''
         hand_strengths = evaluator.batch_eval(board)    
         possible_hand_indexes = card_tools.get_possible_hand_indexes(board)
         self.possible_hands_count = possible_hand_indexes.sum(0, dtype=torch.uint8).item()
@@ -66,15 +66,16 @@ class RangeGenerator:
 
     def generate_range(self, _range):
         ''' Samples a batch of random range vectors.
-        # 
+         
         Each vector is sampled indepently by randomly splitting the probability
         mass between the bottom half and the top half of the range, and then
         recursing on the two halfs.
 
         @{set_board} must be called first.
-        # 
-        @param range a NxK tensor in which to store the sampled ranges, where N is
-        the number of ranges to sample and K is the range size'''
+        
+        Params:
+            range: a NxK tensor in which to store the sampled ranges, where N is 
+                the number of ranges to sample and K is the range size'''
         batch_size = _range.size(0)
         self.sorted_range = arguments.Tensor(batch_size, self.possible_hands_count)
         self._generate_sorted_range(self.sorted_range)
@@ -82,6 +83,5 @@ class RangeGenerator:
         index = self.reverse_order.expand_as(self.sorted_range)
         self.reordered_range = self.sorted_range.gather(1, index)
         
-        # TODO recheck
         _range.zero_()
         _range[self.possible_hands_mask.expand_as(_range)] = self.reordered_range.view(-1)

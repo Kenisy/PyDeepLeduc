@@ -1,5 +1,4 @@
-''' Builds the internal data structures of a @{lookahead|Lookahead} object.
-@classmod lookahead_builder'''
+''' Builds the internal data structures of a @{lookahead|Lookahead} object.'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -13,7 +12,9 @@ class LookaheadBuilder:
 
     def __init__(self, lookahead):
         ''' Constructor
-        @param lookahead the @{lookahead|Lookahead} to generate data structures for'''
+
+        Params:
+            lookahead: the @{lookahead|Lookahead} to generate data structures for'''
         super().__init__()
         self.lookahead = lookahead 
         
@@ -23,7 +24,7 @@ class LookaheadBuilder:
     def _construct_transition_boxes(self):
         ''' Builds the neural net query boxes which estimate counterfactual values
         at depth-limited states of the lookahead.
-        @local'''
+        '''
         global neural_net
         if self.lookahead.tree.street == 2:
             return
@@ -41,7 +42,7 @@ class LookaheadBuilder:
         ''' Computes the number of nodes at each depth of the tree.
 
         Used to find the size for the tensors which store lookahead data.
-        @local'''
+        '''
         assert(self.lookahead.tree.street >= 1 and self.lookahead.tree.street <= 2)
         
         self.lookahead.regret_epsilon = 1.0 / 1000000000
@@ -191,13 +192,14 @@ class LookaheadBuilder:
         contained in the tree.
 
         For example, saves pot sizes and numbers of actions at each lookahead state.
-        # 
-        @param node the current node of the public tree
-        @param layer the depth of the current node
-        @param action_id the index of the action that led to this node
-        @param parent_id the index of the current node's parent
-        @param gp_id the index of the current node's grandparent
-        @local'''
+
+        Params:
+            node: the current node of the public tree
+            layer: the depth of the current node
+            action_id: the index of the action that led to this node
+            parent_id: the index of the current node's parent
+            gp_id: the index of the current node's grandparent
+        '''
         # fill the potsize
         assert(node.pot)
         self.lookahead.pot_size[layer][action_id, parent_id, gp_id, :, :] = node.pot  
@@ -217,7 +219,6 @@ class LookaheadBuilder:
             prev_layer_bets_count = self.lookahead.bets_count[layer - 1]
             
             # compute next coordinates for parent and grandparent
-            # TODO recheck
             next_parent_id = action_id - prev_layer_terminal_actions_count
             next_gp_id = (gp_id) * gp_nonallinbets_count + (parent_id)
 
@@ -250,7 +251,6 @@ class LookaheadBuilder:
                     # we need to make sure that even though there are fewer actions, the last action/allin is has the same last index as if we had full number of actions
                     # we manually set the action_id as the last action (allin)        
                     for b in range(existing_bets_count):
-                        # TODO recheck
                         self.set_datastructures_from_tree_dfs(node.children[len(node.children)-b-1], layer+1, self.lookahead.actions_count[layer]-b-1, next_parent_id, next_gp_id)
                     
                     # mask out empty actions
@@ -269,7 +269,9 @@ class LookaheadBuilder:
 
     def build_from_tree(self, tree):
         ''' Builds the lookahead's internal data structures using the public tree.
-        @param tree the public tree used to construct the lookahead'''
+
+        Params:
+            tree: the public tree used to construct the lookahead'''
         self.lookahead.tree = tree
         self.lookahead.depth = tree.depth   
             
@@ -280,7 +282,6 @@ class LookaheadBuilder:
         self.lookahead.terminal_actions_count = {}
         self.lookahead.actions_count = {}
 
-        # TODO recheck
         self._compute_tree_structures([tree], 0)
 
         # construct the initial data structures using the bet counts
@@ -288,7 +289,6 @@ class LookaheadBuilder:
 
         # traverse the tree and fill the datastructures (pot sizes, non-existin actions, ...)
         # node, layer, action, parent_action, gp_id
-        # TODO recheck
         self.set_datastructures_from_tree_dfs(tree, 0, 0, 0, 0)
         
         # set additional info  
@@ -314,9 +314,11 @@ class LookaheadBuilder:
         Used to find the size for the tensors which store lookahead data. The 
         maximum number of actions is used so that every node at that depth can 
         fit in the same tensor.
-        @param current_layer a list of tree nodes at the current depth
-        @param current_depth the depth of the current tree nodes
-        @local'''
+
+        Params:
+            current_layer: a list of tree nodes at the current depth
+            current_depth: the depth of the current tree nodes
+        '''
         layer_actions_count = 0
         layer_terminal_actions_count = 0
         next_layer = []

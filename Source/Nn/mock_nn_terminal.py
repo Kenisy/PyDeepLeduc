@@ -2,7 +2,7 @@
 equity evaluation instead of a neural net.
 
 Can be used to replace the neural net during debugging.
-@classmod mock_nn_terminal'''
+'''
 
 from Source.Settings.arguments import arguments
 from Source.Settings.game_settings import game_settings
@@ -37,10 +37,12 @@ class MockNnTerminal:
 
     def get_value(self, inputs, outputs):
         ''' Gives the expected showdown equity of the two players' ranges.
-        @param inputs An NxI tensor containing N instances of neural net inputs. 
-        See @{net_builder} for details of each input.
-        @param outputs An NxO tensor in which to store N sets of expected showdown
-        counterfactual values for each player.'''
+
+        Params:
+            inputs: An NxI tensor containing N instances of neural net inputs. 
+                See @{net_builder} for details of each input.
+            outputs: An NxO tensor in which to store N sets of expected showdown
+                counterfactual values for each player.'''
         assert(outputs.dim() == 2 )
         bucket_count = outputs.size(1) / 2
         batch_size = outputs.size(0)

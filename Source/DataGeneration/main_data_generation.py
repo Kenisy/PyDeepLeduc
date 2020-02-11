@@ -1,6 +1,4 @@
-''' Script that generates training and validation files.
-@see data_generation
-@script main_data_generation'''
+''' Script that generates training and validation files.'''
 import sys
 sys.path.append(sys.path[0] + '/../../')
 from Source.Settings.arguments import arguments

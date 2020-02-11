@@ -14,7 +14,6 @@ action that leads to the `i`th child when the player holds the `j`th card.
 
 For a chance node, `strategy[i][j]` gives the probability of reaching the 
 `i`th child for either player when that player holds the `j`th card.
-@classmod strategy_filling
 '''
 
 from Source.Settings.arguments import arguments
@@ -26,8 +25,10 @@ class StrategyFilling:
 
     def _fill_chance(self, node):
         ''' Fills a chance node with the probability of each outcome.
-        @param node the chance node
-        @local'''
+
+        Params:
+            node: the chance node
+        '''
         assert not node.terminal
 
         # filling strategy
@@ -44,8 +45,10 @@ class StrategyFilling:
 
     def _fill_uniformly(self, node):
         ''' Fills a player node with a uniform strategy.
-        @param node the player node
-        @local'''
+
+        Params:
+            node: the player node
+        '''
         assert node.current_player == constants.players.P1 or node.current_player == constants.players.P2
 
         if node.terminal:
@@ -55,8 +58,10 @@ class StrategyFilling:
 
     def _fill_uniform_dfs(self, node):
         ''' Fills a node with a uniform strategy and recurses on the children.
-        @param node the node
-        @local'''
+
+        Params:
+            node: the node
+        '''
         if node.current_player == constants.players.chance:
             self._fill_chance(node)
         else:
@@ -67,5 +72,7 @@ class StrategyFilling:
 
     def fill_uniform(self, tree):
         ''' Fills a public tree with a uniform strategy.
-        @param tree a public tree for Leduc Hold'em or variant'''
+
+        Params:
+            tree: a public tree for Leduc Hold'em or variant'''
         self._fill_uniform_dfs(tree)

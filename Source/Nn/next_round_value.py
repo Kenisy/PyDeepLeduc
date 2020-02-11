@@ -14,7 +14,9 @@ class NextRoundValue:
 
         Creates a tensor that can translate hand ranges to bucket ranges
         on any board.
-        @param nn the neural network'''
+
+        Params:
+            nn: the neural network'''
         super().__init__()
         self._values_are_prepared = False
         self.nn = nn
@@ -22,7 +24,7 @@ class NextRoundValue:
 
     def _init_bucketing(self):
         ''' Initializes the tensor that translates hand ranges to bucket ranges.
-        @local'''
+        '''
         self.bucketer = Bucketer()
         self.bucket_count = self.bucketer.get_bucket_count()
         boards = card_tools.get_second_round_boards()
@@ -57,28 +59,31 @@ class NextRoundValue:
 
     def _card_range_to_bucket_range(self, card_range, bucket_range):
         ''' Converts a range vector over private hands to a range vector over buckets.
-        @param card_range a probability vector over private hands
-        @param bucket_range a vector in which to store the output probabilities
-        over buckets
-        @local'''
+
+        Params:
+            card_range: a probability vector over private hands
+            bucket_range: a vector in which to store the output probabilities over buckets
+        '''
         torch.mm(card_range, self._range_matrix, out=bucket_range)
 
     def _bucket_value_to_card_value(self, bucket_value, card_value):
         ''' Converts a value vector over buckets to a value vector over private hands.
-        @param bucket_value a value vector over buckets
-        @param card_value a vector in which to store the output values over 
-        private hands
-        @local'''
+
+        Params:
+            bucket_value: a value vector over buckets
+            card_value: a vector in which to store the output values over private hands
+        '''
         torch.mm(bucket_value, self._reverse_value_matrix, out=card_value)
 
     def _bucket_value_to_card_value_on_board(self, board, bucket_value, card_value):
         ''' Converts a value vector over buckets to a value vector over private hands
         given a particular set of board cards.
-        @param board a non-empty vector of board cards
-        @param bucket_value a value vector over buckets
-        @param card_value a vector in which to store the output values over 
-        private hands
-        @local'''
+
+        Params:
+            board: a non-empty vector of board cards
+            bucket_value: a value vector over buckets
+            card_value: a vector in which to store the output values over private hands
+        '''
         board_idx = card_tools.get_board_index(board)
         board_matrix = self._range_matrix_board_view[:, board_idx, :].T.clone()
         serialized_card_value = card_value.view(-1, game_settings.card_count)
@@ -91,8 +96,9 @@ class NextRoundValue:
 
         During continual re-solving, there is one pot size for each initial state
         of the second betting round (before board cards are dealt).
-        @param pot_sizes a vector of pot sizes
-        betting round ends'''
+
+        Params:
+            pot_sizes: a vector of pot sizes betting round ends'''
         self.iter = 0
         self.pot_sizes = pot_sizes.view(-1, 1).clone()
         self.batch_size = pot_sizes.size(0)
@@ -105,15 +111,14 @@ class NextRoundValue:
         be given in the same order that pot sizes were given for that function.
         Keeps track of iterations internally, so should be called exactly once for
         every iteration of continual re-solving.
-        # 
-        @param ranges An Nx2xK tensor, where N is the number of states evaluated
-        (must match input to @{start_computation}), 2 is the number of players, and
-        K is the number of private hands. Contains N sets of 2 range vectors.
-        @param values an Nx2xK tensor in which to store the N sets of 2 value vectors
-        which are output'''
+
+        Params:
+            ranges: An Nx2xK tensor, where N is the number of states evaluated
+                (must match input to @{start_computation}), 2 is the number of players, and
+                K is the number of private hands. Contains N sets of 2 range vectors.
+            values: an Nx2xK tensor in which to store the N sets of 2 value vectors which are output'''
         assert ranges != None and values != None
         assert(ranges.size(0) == self.batch_size)
-        # TODO recheck
         self.iter = self.iter + 1
         if self.iter == 1:
             # initializing data structures
@@ -138,7 +143,6 @@ class NextRoundValue:
 
         # computing bucket range in next street for both players at once
         self._card_range_to_bucket_range(ranges.view(self.batch_size * constants.players_count, -1), self.next_round_extended_range.view(self.batch_size * constants.players_count, -1))
-        # TODO recheck
         self.range_normalization = self.next_round_serialized_range.sum(dim=1, keepdim=True)
         rn_view = self.range_normalization.view(self.batch_size, constants.players_count, self.board_count)
         for player in range(constants.players_count):
@@ -150,7 +154,6 @@ class NextRoundValue:
         self.next_round_serialized_range.div_(self.range_normalization.expand_as(self.next_round_serialized_range))
         serialized_range_by_player = self.next_round_serialized_range.view(self.batch_size, constants.players_count, self.board_count, self.bucket_count)
         for player in range(constants.players_count):
-            # TODO recheck
             self.next_round_inputs[:, :, player * self.bucket_count : (player + 1) * self.bucket_count].copy_(self.next_round_extended_range[:,player, :].view(self.next_round_inputs[:, :, player * self.bucket_count : (player + 1) * self.bucket_count].shape))
 
         # usning nn to compute values 
@@ -177,8 +180,10 @@ class NextRoundValue:
 
         Used to update opponent counterfactual values during re-solving after board
         cards are dealt.
-        @param board a non-empty vector of board cards
-        @param values a tensor in which to store the values'''
+
+        Params:
+            board: a non-empty vector of board cards
+            values: a tensor in which to store the values'''
         # check if we have evaluated correct number of iterations
         assert(self.iter == arguments.cfr_iters )
         batch_size = values.size(0)
@@ -191,7 +196,7 @@ class NextRoundValue:
     def _prepare_next_round_values(self):
         ''' Normalizes the counterfactual values remembered between @{get_value} calls
         so that they are an average rather than a sum.
-        @local'''
+        '''
         assert(self.iter == arguments.cfr_iters )
 
         # do nothing if already prepared

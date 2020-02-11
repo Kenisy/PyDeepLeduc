@@ -63,9 +63,11 @@ class PokerTreeBuilder:
     def _get_children_nodes_transition_call(self, parent_node):
         ''' Creates the child node after a call which transitions between betting 
         rounds.
-        @param parent_node the node at which the transition call happens
-        @return a list containing the child node
-        @local'''
+
+        Params:
+            parent_node: the node at which the transition call happens
+        Return a list containing the child node
+        '''
         chance_node = TreeNode()
         chance_node.node_type = constants.node_types.chance_node
         chance_node.street = parent_node.street
@@ -78,9 +80,11 @@ class PokerTreeBuilder:
 
     def _get_children_nodes_chance_node(self, parent_node):
         ''' Creates the children nodes after a chance node.
-        @param parent_node the chance node
-        @return a list of children nodes
-        @local'''
+
+        Params:
+            parent_node: the chance node
+        Return a list of children nodes
+        '''
         assert parent_node.current_player == constants.players.chance
         
         if self.limit_to_street:
@@ -114,15 +118,19 @@ class PokerTreeBuilder:
     def _fill_additional_attributes(self, node):
         ''' Fills in additional convenience attributes which only depend on existing
         node attributes.
-        @param node the node
-        @local'''
+
+        Params:
+            node: the node
+        '''
         node.pot = node.bets.min()
 
     def _get_children_player_node(self, parent_node):
         ''' Creates the children nodes after a player node.
-        @param parent_node the chance node
-        @return a list of children nodes
-        @local'''
+
+        Params:
+            parent_node: the chance node
+        Return a list of children nodes
+        '''
         assert parent_node.current_player != constants.players.chance
 
         children = []
@@ -191,9 +199,11 @@ class PokerTreeBuilder:
 
     def _get_children_nodes(self, parent_node):
         ''' Creates the children after a node.
-        @param parent_node the node to create children for
-        @return a list of children nodes
-        @local'''
+
+        Params:
+            parent_node: the node to create children for
+        Return a list of children nodes
+        '''
         # is this a transition call node (leading to a chance node)?
         call_is_transit = parent_node.current_player == constants.players.P2 and parent_node.bets[0] == parent_node.bets[1] and parent_node.street < constants.streets_count
         
@@ -212,9 +222,11 @@ class PokerTreeBuilder:
 
     def _build_tree_dfs(self, current_node):
         ''' Recursively build the (sub)tree rooted at the current node.
-        @param current_node the root to build the (sub)tree from
-        @return `current_node` after the (sub)tree has been built
-        @local'''
+
+        Params:
+            current_node: the root to build the (sub)tree from
+        Return `current_node` after the (sub)tree has been built
+        '''
         self._fill_additional_attributes(current_node)
         children = self._get_children_nodes(current_node)
         current_node.children = children
@@ -240,21 +252,17 @@ class PokerTreeBuilder:
 
     def build_tree(self, params):
         ''' Builds the tree.
-        @param params table of tree parameters, containing the following fields.
 
-        * `street`. the betting round of the root node
-
-        * `bets`. the number of chips committed at the root node by each player
-
-        * `current_player`. the acting player at the root node
-
-        * `board`. a possibly empty vector of board cards at the root node
-
-        * `limit_to_street`. if `true`, only build the current betting round
-
-        * `bet_sizing` (optional). a @{bet_sizing} object which gives the allowed
-        bets for each player 
-        @return the root node of the built tree'''
+        Params:
+            params: table of tree parameters, containing the following fields:
+                * `street`: the betting round of the root node
+                * `bets`: the number of chips committed at the root node by each player
+                * `current_player`: the acting player at the root node
+                * `board`: a possibly empty vector of board cards at the root node
+                * `limit_to_street`: if `true`, only build the current betting round
+                * `bet_sizing` (optional): a @{bet_sizing} object which gives the allowed
+                    bets for each player 
+        Return the root node of the built tree'''
         root = TreeNode()
         # copy necessary stuff from the root_node not to touch the input
         root.street = params.root_node.street
@@ -262,7 +270,6 @@ class PokerTreeBuilder:
         root.current_player = params.root_node.current_player
         root.board = params.root_node.board.clone()
         
-        # TODO rework
         if not params.bet_sizing:
             params.bet_sizing = BetSizing(arguments.Tensor(arguments.bet_sizing))
 

@@ -3,7 +3,7 @@
 Several of the functions deal with "range vectors", which are probability
 vectors over the set of possible private hands. For Leduc Hold'em,
 each private hand consists of one card.
-@module card_tools '''
+'''
 
 from Source.Settings.game_settings import game_settings
 from Source.Settings.arguments import arguments
@@ -17,8 +17,10 @@ class M:
 
     def hand_is_possible(self, hand):
         ''' Gives whether a set of cards is valid.
-        @param hand a vector of cards
-        @return `true` if the tensor contains valid cards and no card is repeated'''
+
+        Params:
+            hand: a vector of cards
+        Return `true` if the tensor contains valid cards and no card is repeated'''
         assert hand.min() >= 0 and hand.max() < game_settings.card_count, 'Illegal cards in hand'
         used_cards = torch.zeros(game_settings.card_count)
         for i in range(hand.size(0)): 
@@ -27,8 +29,10 @@ class M:
 
     def get_possible_hand_indexes(self, board):
         ''' Gives the private hands which are valid with a given board.
-        @param board a possibly empty vector of board cards
-        @return a vector with an entry for every possible hand (private card), which
+
+        Params:
+            board: a possibly empty vector of board cards
+        Return a vector with an entry for every possible hand (private card), which
         is `1` if the hand shares no cards with the board and `0` otherwise'''
         out = arguments.Tensor(game_settings.card_count).fill_(0)
         if board.dim() == 0:
@@ -45,8 +49,10 @@ class M:
 
     def get_impossible_hand_indexes(self, board):
         ''' Gives the private hands which are invalid with a given board.
-        @param board a possibly empty vector of board cards
-        @return a vector with an entry for every possible hand (private card), which
+
+        Params:
+            board: a possibly empty vector of board cards
+        Return a vector with an entry for every possible hand (private card), which
         is `1` if the hand shares at least one card with the board and `0` otherwise'''
         out = self.get_possible_hand_indexes(board)
         out.add_(-1)
@@ -56,8 +62,10 @@ class M:
     def get_uniform_range(self, board):
         ''' Gives a range vector that has uniform probability on each hand which is 
         valid with a given board.
-        @param board a possibly empty vector of board cards
-        @return a range vector where invalid hands have 0 probability and valid 
+
+        Params:
+            board: a possibly empty vector of board cards
+        Return a range vector where invalid hands have 0 probability and valid 
         hands have uniform probability'''
         out = self.get_possible_hand_indexes(board)
         out.div_(out.sum())
@@ -66,9 +74,11 @@ class M:
 
     def get_random_range(self, board, seed):
         ''' Randomly samples a range vector which is valid with a given board.
-        @param board a possibly empty vector of board cards
-        @param[opt] seed a seed for the random number generator
-        @return a range vector where invalid hands are given 0 probability, each
+
+        Params:
+            board: a possibly empty vector of board cards
+            seed [opt]: a seed for the random number generator
+        Return a range vector where invalid hands are given 0 probability, each
         valid hand is given a probability randomly sampled from the uniform
         distribution on [0,1), and the resulting range is normalized'''
         torch.manual_seed(seed)
@@ -80,9 +90,11 @@ class M:
 
     def is_valid_range(self, _range, board):
         ''' Checks if a range vector is valid with a given board.
-        @param range a range vector to check
-        @param board a possibly empty vector of board cards
-        @return `true` if the range puts 0 probability on invalid hands and has
+
+        Params:
+            range: a range vector to check
+            board: a possibly empty vector of board cards
+        Return `true` if the range puts 0 probability on invalid hands and has
         total probability 1'''
         check = _range.clone()
         only_possible_hands = _range.clone().mul_(self.get_impossible_hand_indexes(board)).sum() == 0
@@ -91,8 +103,10 @@ class M:
 
     def board_to_street(self, board):
         ''' Gives the current betting round based on a board vector.
-        @param board a possibly empty vector of board cards
-        @return the current betting round'''
+
+        Params:
+            board: a possibly empty vector of board cards
+        Return the current betting round'''
         if board.dim() == 0 or board.size(0) == 0:
             return 1
         else:
@@ -100,7 +114,8 @@ class M:
 
     def get_second_round_boards(self):
         ''' Gives all possible sets of board cards for the game.
-        @return an NxK tensor, where N is the number of possible boards, and K is
+        
+        Return an NxK tensor, where N is the number of possible boards, and K is
         the number of cards on each board'''
         boards_count = self.get_boards_count()
         if game_settings.board_card_count == 1:
@@ -123,7 +138,8 @@ class M:
 
     def get_boards_count(self):
         ''' Gives the number of possible boards.
-        @return the number of possible boards'''
+
+        Return the number of possible boards'''
         if game_settings.board_card_count == 1:
             return game_settings.card_count
         elif game_settings.board_card_count == 2: 
@@ -132,8 +148,7 @@ class M:
             assert False, 'unsupported board size'
 
     def _init_board_index_table(self):
-        ''' Initializes the board index table.
-        @local'''
+        ''' Initializes the board index table.'''
         if game_settings.board_card_count == 1:
             self._board_index_table = torch.arange(game_settings.card_count)
         elif game_settings.board_card_count == 2:
@@ -149,8 +164,10 @@ class M:
 
     def get_board_index(self, board):
         ''' Gives a numerical index for a set of board cards.
-        @param board a non-empty vector of board cards
-        @return the numerical index for the board'''
+
+        Params:
+            board: a non-empty vector of board cards
+        Return the numerical index for the board'''
         index = self._board_index_table
         for i in range(board.size(0)):
             index = index[board[i]]
@@ -159,9 +176,11 @@ class M:
 
     def normalize_range(self, board, _range):
         ''' Normalizes a range vector over hands which are valid with a given board.
-        @param board a possibly empty vector of board cards
-        @param range a range vector
-        @return a modified version of `range` where each invalid hand is given 0
+
+        Params:
+            board: a possibly empty vector of board cards
+            range: a range vector
+        Return a modified version of `range` where each invalid hand is given 0
         probability and the vector is normalized'''
         mask = self.get_possible_hand_indexes(board)
         out = _range.clone().mul(mask)

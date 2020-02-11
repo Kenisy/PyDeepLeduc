@@ -43,8 +43,10 @@ class ContinualResolving:
     def start_new_hand(self, state):
         ''' Re-initializes the continual re-solving to start a new game from the root
         of the game tree.
-        @param state the first state where the re-solving player acts in the new
-        game (a table of the type returned by @{protocol_to_node.parse_state})'''
+
+        Params:
+            state: the first state where the re-solving player acts in the new
+                game (a table of the type returned by @{protocol_to_node.parse_state})'''
         self.last_node = None
         self.decision_id = 0
         self.position = state.position
@@ -52,11 +54,13 @@ class ContinualResolving:
 
     def _resolve_node(self, node, state):
         ''' Re-solves a node to choose the re-solving player's next action.
-        @param node the game node where the re-solving player is to act (a table of 
-        the type returned by @{protocol_to_node.parsed_state_to_node})
-        @param state the game state where the re-solving player is to act
-        (a table of the type returned by @{protocol_to_node.parse_state})
-        @local'''
+
+        Params:
+            node: the game node where the re-solving player is to act (a table of 
+                the type returned by @{protocol_to_node.parsed_state_to_node})
+            state: the game state where the re-solving player is to act
+                (a table of the type returned by @{protocol_to_node.parse_state})
+        '''
         assert(self.decision_id)
         # 1.0 first node and P1 position
         # no need to update an invariant since this is the very first situation
@@ -80,12 +84,13 @@ class ContinualResolving:
         ''' Updates the player's range and the opponent's counterfactual values to be
         consistent with game actions since the last re-solved state.
         Updates it only for actions we did not make, since we update the invariant for our action as soon as we make it.
-        # 
-        @param node the game node where the re-solving player is to act (a table of 
-        the type returned by @{protocol_to_node.parsed_state_to_node})
-        @param state the game state where the re-solving player is to act
-        (a table of the type returned by @{protocol_to_node.parse_state})
-        @local'''
+
+        Params:
+            node: the game node where the re-solving player is to act (a table of 
+                the type returned by @{protocol_to_node.parsed_state_to_node})
+            state: the game state where the re-solving player is to act
+                (a table of the type returned by @{protocol_to_node.parse_state})
+        '''
         # 1.0 street has changed
         if self.last_node and self.last_node.street != node.street:
             assert(self.last_node.street + 1 == node.street)
@@ -110,16 +115,16 @@ class ContinualResolving:
 
     def compute_action(self, node, state):
         ''' Re-solves a node and chooses the re-solving player's next action.
-        @param node the game node where the re-solving player is to act (a table of 
-        the type returned by @{protocol_to_node.parsed_state_to_node})
-        @param state the game state where the re-solving player is to act
-        (a table of the type returned by @{protocol_to_node.parse_state})
-        @return an action sampled from the re-solved strategy at the given state,
-        with the fields.
 
-        * `action`. an element of @{constants.acpc_actions}
-
-        * `raise_amount`. the number of chips to raise (if `action` is raise)'''
+        Params:
+            node: the game node where the re-solving player is to act (a table of 
+                the type returned by @{protocol_to_node.parsed_state_to_node})
+            state: the game state where the re-solving player is to act
+                (a table of the type returned by @{protocol_to_node.parse_state})
+        Return an action sampled from the re-solved strategy at the given state,
+        with the fields:
+            * `action`: an element of @{constants.acpc_actions}
+            * `raise_amount`: the number of chips to raise (if `action` is raise)'''
         self._resolve_node(node, state)  
         sampled_bet = self._sample_bet(node, state)  
         
@@ -132,12 +137,14 @@ class ContinualResolving:
 
     def _sample_bet(self, node, state):
         ''' Samples an action to take from the strategy at the given game state.
-        @param node the game node where the re-solving player is to act (a table of 
-        the type returned by @{protocol_to_node.parsed_state_to_node})
-        @param state the game state where the re-solving player is to act
-        (a table of the type returned by @{protocol_to_node.parse_state})
-        @return an index representing the action chosen
-        @local'''
+
+        Params:
+            node: the game node where the re-solving player is to act (a table of 
+                the type returned by @{protocol_to_node.parsed_state_to_node})
+            state: the game state where the re-solving player is to act
+                (a table of the type returned by @{protocol_to_node.parse_state})
+        Return an index representing the action chosen
+        '''
         # 1.0 get the possible bets in the node
         possible_bets = self.resolving.get_possible_actions()
         actions_count = possible_bets.size(0)
@@ -173,15 +180,15 @@ class ContinualResolving:
 
     def _bet_to_action(self, node, sampled_bet):
         ''' Converts an internal action representation into a cleaner format.
-        @param node the game node where the re-solving player is to act (a table of 
-        the type returned by @{protocol_to_node.parsed_state_to_node})
-        @param sampled_bet the index of the action to convert
-        @return a table specifying the action, with the fields.
 
-        * `action`. an element of @{constants.acpc_actions}
-
-        * `raise_amount`. the number of chips to raise (if `action` is raise)
-        @local'''
+        Params:
+            node: the game node where the re-solving player is to act (a table of 
+                the type returned by @{protocol_to_node.parsed_state_to_node})
+            sampled_bet: the index of the action to convert
+        Return a table specifying the action, with the fields:
+            * `action`: an element of @{constants.acpc_actions}
+            * `raise_amount`: the number of chips to raise (if `action` is raise)
+        '''
         return sampled_bet
         # if sampled_bet == constants.actions.fold:
         #     return {action = constants.acpc_actions.fold}

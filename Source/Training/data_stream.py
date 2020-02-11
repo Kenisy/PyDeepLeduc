@@ -1,5 +1,4 @@
-''' Handles the data used for neural net training and validation.
-@classmod data_stream'''
+''' Handles the data used for neural net training and validation.'''
 
 from Source.Settings.arguments import arguments
 import torch
@@ -44,14 +43,16 @@ class DataStream:
         ''' Gives the number of batches of validation data.
 
         Batch size is defined by @{arguments.train_batch_size}.
-        @return the number of batches'''
+
+        Return the number of batches'''
         return self.valid_batch_count
 
     def get_train_batch_count(self):
         ''' Gives the number of batches of training data.
 
         Batch size is defined by @{arguments.train_batch_size}
-        @return the number of batches'''
+
+        Return the number of batches'''
         return self.train_batch_count
 
     def start_epoch(self):
@@ -67,14 +68,14 @@ class DataStream:
 
     def get_batch(self, inputs, targets, mask, batch_index):
         ''' Returns a batch of data from a specified data set.
-        @param inputs the inputs set for the given data set
-        @param targets the targets set for the given data set
-        @param mask the masks set for the given data set
-        @param batch_index the index of the batch to return
-        @return the inputs set for the batch
-        @return the targets set for the batch
-        @return the masks set for the batch 
-        @local'''
+
+        Params:
+            inputs: the inputs set for the given data set
+            targets: the targets set for the given data set
+            mask: the masks set for the given data set
+            batch_index: the index of the batch to return
+        Return the (inputs, targets, masks) set for the batch
+        '''
         assert inputs.size(0) == targets.size(0) and inputs.size(0) == mask.size(0)
         batch_inputs = inputs[batch_index * arguments.train_batch_size : (batch_index + 1) * arguments.train_batch_size]
         batch_targets = targets[batch_index * arguments.train_batch_size : (batch_index + 1) * arguments.train_batch_size]
@@ -83,16 +84,18 @@ class DataStream:
 
     def get_train_batch(self, batch_index):
         ''' Returns a batch of data from the training set.
-        @param batch_index the index of the batch to return
-        @return the inputs set for the batch
-        @return the targets set for the batch
-        @return the masks set for the batch'''
+
+        Params:
+            batch_index: the index of the batch to return
+        Return the (inputs, targets, masks) set for the batch
+        '''
         return self.get_batch(self.data.train_inputs, self.data.train_targets, self.data.train_mask, batch_index)
 
     def get_valid_batch(self, batch_index):
         ''' Returns a batch of data from the validation set.
-        @param batch_index the index of the batch to return
-        @return the inputs set for the batch
-        @return the targets set for the batch
-        @return the masks set for the batch'''
+
+        Params:
+            batch_index: the index of the batch to return
+        Return the (inputs, targets, masks) set for the batch
+        '''
         return self.get_batch(self.data.valid_inputs, self.data.valid_targets, self.data.valid_mask, batch_index)

@@ -1,5 +1,4 @@
-''' Wraps the calls to the final neural net.
-@classmod value_nn'''
+''' Wraps the calls to the final neural net.'''
 
 from Source.Settings.arguments import arguments
 import torch
@@ -23,9 +22,11 @@ class ValueNn:
         
     def get_value(self, inputs, output):
         ''' Gives the neural net output for a batch of inputs.
-        @param inputs An NxI tensor containing N instances of neural net inputs. 
-        See @{net_builder} for details of each input.
-        @param output An NxO tensor in which to store N sets of neural net outputs. 
-        See @{net_builder} for details of each output.'''
+
+        Params:
+            inputs: An NxI tensor containing N instances of neural net inputs. 
+                See @{net_builder} for details of each input.
+            output: An NxO tensor in which to store N sets of neural net outputs. 
+                See @{net_builder} for details of each output.'''
         with torch.no_grad():
             output.copy_(self.mlp(inputs))

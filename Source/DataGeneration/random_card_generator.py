@@ -1,5 +1,4 @@
-''' Samples random card combinations.
-@module random_card_generator'''
+''' Samples random card combinations.'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -12,9 +11,10 @@ class M:
 
         Each subset of the deck of the correct size is sampled with 
         uniform probability.
-        # 
-        @param count the number of cards to sample
-        @return a vector of cards, represented numerically'''
+        
+        Params:
+            count: the number of cards to sample
+        Return a vector of cards, represented numerically'''
         # marking all used cards
         used_cards = arguments.IntTensor(game_settings.card_count).zero_()
         

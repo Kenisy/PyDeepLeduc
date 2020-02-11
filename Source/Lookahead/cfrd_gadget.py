@@ -1,7 +1,7 @@
 ''' Uses the the CFR-D gadget to generate opponent ranges for re-solving.
-# 
+
 See [Solving Imperfect Information Games Using Decomposition](http.//poker.cs.ualberta.ca/publications/aaai2014-cfrd.pdf)
-@classmod cfrd_gadget'''
+'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Game.card_tools import card_tools
@@ -11,9 +11,11 @@ import torch
 class CFRDGadget:
     def __init__(self, board, player_range, opponent_cfvs):
         ''' Constructor
-        @param board board card
-        @param player_range an initial range vector for the opponent
-        @param opponent_cfvs the opponent counterfactual values vector used for re-solving'''
+
+        Params:
+            board: board card
+            player_range: an initial range vector for the opponent
+            opponent_cfvs: the opponent counterfactual values vector used for re-solving'''
         super().__init__()
         assert(board != None)
 
@@ -46,10 +48,12 @@ class CFRDGadget:
     def compute_opponent_range(self, current_opponent_cfvs, iteration):
         ''' Uses one iteration of the gadget game to generate an opponent range for
         the current re-solving iteration.
-        @param current_opponent_cfvs the vector of cfvs that the opponent receives
-        with the current strategy in the re-solve game
-        @param iteration the current iteration number of re-solving
-        @return the opponent range vector for this iteration'''
+
+        Params:
+            current_opponent_cfvs: the vector of cfvs that the opponent receives 
+                with the current strategy in the re-solve game
+            iteration: the current iteration number of re-solving
+        Return the opponent range vector for this iteration'''
         play_values = current_opponent_cfvs
         terminate_values = self.input_opponent_value
 

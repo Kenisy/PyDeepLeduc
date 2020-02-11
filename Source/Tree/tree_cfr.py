@@ -4,7 +4,7 @@ solve a game represented by a complete game tree.
 As this class does full solving from the root of the game with no 
 limited lookahead, it is not used in continual re-solving. It is provided
 simply for convenience.
-@classmod tree_cfr'''
+'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -23,9 +23,11 @@ class TreeCFR:
         ''' Gets an evaluator for player equities at a terminal node.
         Caches the result to minimize creation of @{terminal_equity|TerminalEquity}
         objects. 
-        @param node the terminal node to evaluate
-        @return a @{terminal_equity|TerminalEquity} evaluator for the node
-        @local'''
+
+        Params:
+            node: the terminal node to evaluate
+        Return a @{terminal_equity|TerminalEquity} evaluator for the node
+        '''
         cached = self._cached_terminal_equities.get(node.board)
         if cached == None:
             cached = TerminalEquity()
@@ -36,9 +38,11 @@ class TreeCFR:
 
     def cfrs_iter_dfs(self, node, _iter ):
         ''' Recursively walks the tree, applying the CFR algorithm.
-        @param node the current node in the tree
-        @param iter the current iteration number
-        @local'''
+
+        Params:
+            node: the current node in the tree
+            iter: the current iteration number
+        '''
         assert(node.current_player == constants.players.P1 or node.current_player == constants.players.P2 or node.current_player == constants.players.chance)
         
         opponent_index = 1 - node.current_player
@@ -137,9 +141,11 @@ class TreeCFR:
 
     def update_regrets(self, node, current_regrets):
         ''' Update a node's total regrets with the current iteration regrets.
-        @param node the node to update
-        @param current_regrets the regrets from the current iteration of CFR
-        @local'''
+
+        Params:
+            node: the node to update
+            current_regrets: the regrets from the current iteration of CFR
+        '''
         # node.regrets.add(current_regrets)  
         # negative_regrets = node.regrets[node.regrets.lt(0)]  
         # node.regrets[node.regrets.lt(0)] = negative_regrets
@@ -148,9 +154,11 @@ class TreeCFR:
 
     def update_average_strategy(self, node, current_strategy, _iter):
         ''' Update a node's average strategy with the current iteration strategy.
-        @param node the node to update
-        @param current_strategy the CFR strategy for the current iteration
-        @param iter the iteration number of the current CFR iteration'''
+
+        Params:
+            node: the node to update
+            current_strategy: the CFR strategy for the current iteration
+            iter: the iteration number of the current CFR iteration'''
         if _iter >= arguments.cfr_skip_iters:
             if node.strategy == None:
                 node.strategy = arguments.Tensor(actions_count, game_settings.card_count).fill_(0)
@@ -169,11 +177,12 @@ class TreeCFR:
 
     def run_cfr(self, root, starting_ranges, iter_count=arguments.cfr_iters):
         ''' Run CFR to solve the given game tree.
-        @param root the root node of the tree to solve.
-        @param[opt] starting_ranges probability vectors over player private hands
-        at the root node (default uniform)
-        @param[opt] iter_count the number of iterations to run CFR for
-        (default @{arguments.cfr_iters})'''
+
+        Params:
+            root: the root node of the tree to solve.
+            starting_ranges [opt]: probability vectors over player private hands
+                at the root node (default uniform)
+            iter_count [opt]: the number of iterations to run CFR for (default @{arguments.cfr_iters})'''
         assert starting_ranges != None
 
         root.ranges_absolute =  starting_ranges

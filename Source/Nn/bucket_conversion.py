@@ -1,5 +1,4 @@
-''' Converts between vectors over private hands and vectors over buckets.
-@classmod bucket_conversion'''
+''' Converts between vectors over private hands and vectors over buckets.'''
 
 from Source.Settings.arguments import arguments
 from Source.Settings.game_settings import game_settings
@@ -10,15 +9,21 @@ class BucketConversion:
 
     def set_board(self, board):
         ''' Sets the board cards for the bucketer.
-        @param board a non-empty vector of board cards'''
+
+        Params:
+            board: a non-empty vector of board cards'''
         self.bucketer = Bucketer()
         self.bucket_count = self.bucketer.get_bucket_count()
         self._range_matrix = arguments.Tensor(game_settings.card_count, self.bucket_count ).zero_()
 
         buckets = self.bucketer.compute_buckets(board)
-        # TODO recheck
         class_ids = torch.arange(0, self.bucket_count)
-        class_ids = class_ids.float()
+        
+        if arguments.gpu: 
+            buckets = buckets.cuda() 
+            class_ids = class_ids.cuda()
+        else:
+            class_ids = class_ids.float()
 
         class_ids = class_ids.view(1, self.bucket_count).expand(game_settings.card_count, self.bucket_count)
         card_buckets = buckets.view(game_settings.card_count, 1).expand(game_settings.card_count, self.bucket_count)
@@ -34,25 +39,28 @@ class BucketConversion:
         ''' Converts a range vector over private hands to a range vector over buckets.
 
         @{set_board} must be called first. Used to create inputs to the neural net.
-        @param card_range a probability vector over private hands
-        @param bucket_range a vector in which to save the resulting probability 
-        vector over buckets'''
+
+        Params:
+            card_range: a probability vector over private hands
+            bucket_range: a vector in which to save the resulting probability vector over buckets'''
         torch.mm(card_range, self._range_matrix, out=bucket_range)
 
     def bucket_value_to_card_value(self, bucket_value, card_value):
         ''' Converts a value vector over buckets to a value vector over private hands.
 
         @{set_board} must be called first. Used to process neural net outputs.
-        @param bucket_value a vector of values over buckets
-        @param card_value a vector in which to save the resulting vector of values
-        over private hands'''
+
+        Params:
+            bucket_value: a vector of values over buckets
+            card_value: a vector in which to save the resulting vector of values over private hands'''
         torch.mm(bucket_value, self._reverse_value_matrix, out=card_value)
 
     def get_possible_bucket_mask(self):
         ''' Gives a vector of possible buckets on the the board.
 
         @{set_board} must be called first.
-        @return a mask vector over buckets where each entry is 1 if the bucket is
+
+        Return a mask vector over buckets where each entry is 1 if the bucket is
         valid, 0 if not'''
         mask = arguments.Tensor(1, self.bucket_count)
         card_indicator = arguments.Tensor(1, game_settings.card_count).fill_(1)

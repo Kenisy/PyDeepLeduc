@@ -14,7 +14,7 @@ action  that leads to the `i`th child when the player holds the `j`th card.
 
 For a chance node, `strategy[i][j]` gives the probability of reaching the
 `i`th child for either player when that player holds the `j`th card.
-@classmod tree_strategy_filling'''
+'''
 from Source.Settings.arguments import arguments
 from Source.Settings.constants import constants
 from Source.Settings.game_settings import game_settings
@@ -40,8 +40,10 @@ class TreeStrategyFilling:
 
     def _fill_chance(self, node):
         ''' Fills all chance nodes of a subtree with the probability of each outcome.
-        @param node the root of the subtree
-        @local'''
+
+        Params:
+            node: the root of the subtree
+        '''
         if(node.terminal):
             return
 
@@ -67,10 +69,11 @@ class TreeStrategyFilling:
         player.
 
         Used in sections of the game to which the player doesn't play.
-        # 
-        @param node the root of the subtree
-        @param player the player which is given the uniform random strategy
-        @local'''
+
+        Params:
+            node: the root of the subtree
+            player: the player which is given the uniform random strategy
+        '''
         if(node.terminal):
             return
 
@@ -86,8 +89,9 @@ class TreeStrategyFilling:
         ''' Recursively fills a player's strategy for the subtree rooted at an 
         opponent node.
 
-        @param params tree walk parameters (see @{_fill_strategies_dfs})
-        @local'''
+        Params:
+            params: tree walk parameters (see @{_fill_strategies_dfs})
+        '''
         node = params.node
         player = params.player
         _range = params.range
@@ -114,13 +118,12 @@ class TreeStrategyFilling:
     def _fill_starting_node(self, node, player, p1_range, p2_range):
         ''' Recursively fills a player's strategy in a tree.
 
-        @param node the root of the tree
-        @param player the player to calculate a strategy for
-        @param p1_range a probability vector of the first player's private hand 
-        at the root
-        @param p2_range a probability vector of the second player's private hand
-        at the root
-        @local'''
+        Params:
+            node: the root of the tree
+            player: the player to calculate a strategy for
+            p1_range: a probability vector of the first player's private hand at the root
+            p2_range: a probability vector of the second player's private hand at the root
+        '''
         assert(not node.terminal)
         assert(node.current_player == constants.players.P1)
 
@@ -143,11 +146,12 @@ class TreeStrategyFilling:
     def _fill_player_node(self, params):
         ''' Recursively fills a player's strategy for the subtree rooted at a 
         player node.
-        # 
+        
         Re-solves to generate a strategy for the player node.
 
-        @param params tree walk parameters (see @{_fill_strategies_dfs})
-        @local'''
+        Params:
+            params: tree walk parameters (see @{_fill_strategies_dfs})
+        '''
         node = params.node
         player = params.player
         _range = params.range
@@ -164,12 +168,12 @@ class TreeStrategyFilling:
         ''' Recursively fills a player's strategy for the subtree rooted at a 
         player node.
 
-        @param node the player node
-        @param player the player to fill the strategy for
-        @param range a probability vector giving the player's range at the node
-        @param resolving a @{resolving|Resolving} object which has been used to
-        re-solve the node
-        @local'''
+        Params:
+            node: the player node
+            player: the player to fill the strategy for
+            range: a probability vector giving the player's range at the node
+            resolving: a @{resolving|Resolving} object which has been used to re-solve the node
+        '''
         assert(resolving)
         assert(node.current_player == player)
         player_actions = resolving.get_possible_actions()
@@ -235,7 +239,6 @@ class TreeStrategyFilling:
                     params.cf_values =  cf_values[action]
                     params.resolving = resolving
                     params.our_last_action = node.actions[action]
-                    # TODO recheck
                     # params.opponent_range = opponent_range
                     self._fill_strategies_dfs(params)
 
@@ -243,8 +246,9 @@ class TreeStrategyFilling:
         ''' Recursively fills a player's strategy for the subtree rooted at a 
         chance node.
 
-        @param params tree walk parameters (see @{_fill_strategies_dfs})
-        @local'''
+        Params:
+            params: tree walk parameters (see @{_fill_strategies_dfs})
+        '''
         resolving = params.resolving
         node = params.node
         player = params.player
@@ -282,21 +286,16 @@ class TreeStrategyFilling:
     def _fill_strategies_dfs(self, params):
         ''' Recursively fills a player's strategy for a subtree.
 
-        @param params a table of tree walk parameters with the following fields.
-
-        * `node`. the root of the subtree
-        
-        * `player`. the player to fill the strategy for
-
-        * `range`. a probability vector over the player's private hands at the node
-
-        * `cf_values`. a vector of opponent counterfactual values at the node
-
-        * `resolving`. a @{resolving|Resolving} object which was used to
-        re-solve the last player node
-
-        * `our_last_action`. the action taken by the player at their last node
-        @local'''
+        Params:
+            params: a table of tree walk parameters with the following fields:
+                * `node`: the root of the subtree
+                * `player`: the player to fill the strategy for
+                * `range`: a probability vector over the player's private hands at the node
+                * `cf_values`: a vector of opponent counterfactual values at the node
+                * `resolving`: a @{resolving|Resolving} object which was used to
+                    re-solve the last player node
+                * `our_last_action`: the action taken by the player at their last node
+        '''
         assert(params.player == constants.players.chance or params.player == constants.players.P1 or params.player == constants.players.P2)
         if(params.node.terminal):
             return
@@ -312,13 +311,14 @@ class TreeStrategyFilling:
 
         Recursively does continual re-solving on every node of the tree to generate
         the strategy for that node.
-        # 
-        @param root the root of the tree
-        @param player the player to fill the strategy for
-        @param p1_range a probability vector over the first player's private hands
-        at the root of the tree
-        @param p2_range a probability vector over the second player's private hands
-        at the root of the tree'''
+
+        Params:
+            root: the root of the tree
+            player: the player to fill the strategy for
+            p1_range: a probability vector over the first player's private hands
+                at the root of the tree
+            p2_range: a probability vector over the second player's private hands
+                at the root of the tree'''
         self.current_filling_player = player
         if player == constants.players.chance:
             self._fill_chance(root)
@@ -328,6 +328,8 @@ class TreeStrategyFilling:
 
     def fill_uniform_strategy(self, root):
         ''' Fills a tree with uniform random strategies for both players.
-        @param root the root of the tree'''
+
+        Params:
+            root: the root of the tree'''
         self._fill_uniformly(root, constants.players.P1)
         self._fill_uniformly(root, constants.players.P2)
