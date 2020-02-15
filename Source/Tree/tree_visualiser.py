@@ -228,4 +228,4 @@ class TreeVisualiser:
         with open(filename, 'w') as f:
             f.write(out)
 
-        render('dot', 'png', filename)
+        render('dot', 'svg', filename)
