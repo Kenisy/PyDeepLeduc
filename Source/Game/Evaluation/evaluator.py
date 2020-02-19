@@ -72,7 +72,7 @@ class M:
         elif hand.size(0) == 3:
             return self.evaluate_three_card_hand(hand_ranks)
         else:
-            assert(False, 'unsupported size of hand!' )
+            assert False, 'unsupported size of hand!'
 
     def batch_eval(self, board, impossible_hand_value=-1):
         ''' Gives strength representations for all private hands on the given board.

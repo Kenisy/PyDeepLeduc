@@ -137,7 +137,7 @@ class TreeCFR:
                 self.update_regrets(node, current_regrets)
             
                 # accumulating average strategy     
-                self.update_average_strategy(node, current_strategy, _iter)
+                self.update_average_strategy(node, current_strategy, _iter, actions_count)
 
     def update_regrets(self, node, current_regrets):
         ''' Update a node's total regrets with the current iteration regrets.
@@ -152,7 +152,7 @@ class TreeCFR:
         node.regrets.add_(current_regrets)
         node.regrets[torch.le(node.regrets, self.regret_epsilon)] = self.regret_epsilon
 
-    def update_average_strategy(self, node, current_strategy, _iter):
+    def update_average_strategy(self, node, current_strategy, _iter, actions_count):
         ''' Update a node's average strategy with the current iteration strategy.
 
         Params:

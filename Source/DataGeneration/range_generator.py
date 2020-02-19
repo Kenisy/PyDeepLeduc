@@ -23,6 +23,8 @@ class RangeGenerator:
             cards[:, 0].copy_(mass) 
         else:
             rand = torch.rand(batch_size)
+            if arguments.gpu: 
+                rand = rand.cuda()
             mass1 = mass.clone().mul(rand)
             mass2 = mass -mass1
             halfSize = card_count // 2
@@ -53,9 +55,7 @@ class RangeGenerator:
         hand_strengths = evaluator.batch_eval(board)    
         possible_hand_indexes = card_tools.get_possible_hand_indexes(board)
         self.possible_hands_count = possible_hand_indexes.sum(0, dtype=torch.uint8).item()
-        self.possible_hands_mask = possible_hand_indexes.view(1, -1)
-        if not arguments.gpu:
-            self.possible_hands_mask = self.possible_hands_mask.bool()
+        self.possible_hands_mask = possible_hand_indexes.view(1, -1).bool()
         non_coliding_strengths = arguments.Tensor(self.possible_hands_count)  
         non_coliding_strengths = torch.masked_select(hand_strengths, self.possible_hands_mask)
         _, order = non_coliding_strengths.sort()
@@ -81,6 +81,8 @@ class RangeGenerator:
         self._generate_sorted_range(self.sorted_range)
         # we have to reorder the the range back to undo the sort by strength
         index = self.reverse_order.expand_as(self.sorted_range)
+        if arguments.gpu:
+            index = index.cuda()
         self.reordered_range = self.sorted_range.gather(1, index)
         
         _range.zero_()
